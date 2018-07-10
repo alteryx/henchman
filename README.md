@@ -4,6 +4,10 @@ A collection of utility functions for making demo notebooks.
 * Free software: GNU General Public License v3
 * Documentation: https://notebook-utilities.readthedocs.io.
 
+To install the development version with pip: 
+1. download the repository 
+2. open a terminal and navigate to the downloaded folder
+3. run `pip install -e .`
 
 ## Functionality
 
