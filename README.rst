@@ -1,13 +1,13 @@
 ==================
-Notebook Utilities
+Henchman
 ==================
 
 
-.. image:: https://img.shields.io/pypi/v/notebook_utilities.svg
-        :target: https://pypi.python.org/pypi/notebook_utilities
+.. image:: https://img.shields.io/pypi/v/henchman.svg
+        :target: https://pypi.python.org/pypi/henchman
 
-.. image:: https://img.shields.io/travis/featurelabs/notebook_utilities.svg
-        :target: https://travis-ci.org/featurelabs/notebook_utilities
+.. image:: https://img.shields.io/travis/featurelabs/henchman.svg
+        :target: https://travis-ci.org/featurelabs/henchman
 
 .. image:: https://readthedocs.org/projects/notebook-utilities/badge/?version=latest
         :target: https://notebook-utilities.readthedocs.io/en/latest/?badge=latest

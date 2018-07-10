@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use Notebook Utilities in a project::
+To use Henchman in a project::
 
-    import notebook_utilities
+    import henchman

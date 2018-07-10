@@ -3,12 +3,14 @@
 '''The learning module. Do machine learning.
 
 Contents:
-        create_model: Makes a model
+        create_model: Makes a model.
+        inplace_encoder: Label encodes all columns with dtype = 'O'.
         feature_importances: Prints most important features in a model.
 
 '''
 import numpy as np
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
+from sklearn.preprocessing import LabelEncoder
 
 
 def _fit_predict(X_train, X_test, y_train, y_test, model, metric):
@@ -56,7 +58,24 @@ def create_model(X, y, model=None, metric=None, n_splits=1):
         return scorelist, fit_model
 
 
-def raw_feature_importances(X, model):
+def inplace_encoder(X):
+    '''Replace all columns with pd.dtype == 'O' with integers.
+    This avoids the dimensionality problems of OHE at the cost of
+    implying an artificial ordering in categorical features.
+
+    Input:
+        X (df): The dataframe to encode
+    Output:
+        X (df): An encoded dataframe
+    '''
+    for col in X:
+        if X[col].dtype == 'O':
+            le = LabelEncoder()
+            X[col] = le.fit_transform(X[[col]].astype(str))
+    return X
+
+
+def _raw_feature_importances(X, model):
     feature_imps = [(imp, X.columns[i])
                     for i, imp in enumerate(model.feature_importances_)]
     feature_imps.sort()
@@ -65,7 +84,7 @@ def raw_feature_importances(X, model):
 
 
 def feature_importances(X, model, n_feats=5):
-    feature_imps = raw_feature_importances(X, model)
+    feature_imps = _raw_feature_importances(X, model)
     for i, f in enumerate(feature_imps[0:n_feats]):
         print('{}: {} [{:.3f}]'.format(i + 1, f[1], f[0]/feature_imps[0][0]))
     print('-----\n')

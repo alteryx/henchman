@@ -1,4 +1,4 @@
-Welcome to Notebook Utilities's documentation!
+Welcome to Henchman's documentation!
 ======================================
 
 .. toctree::

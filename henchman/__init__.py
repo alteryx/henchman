@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''Top-level package for Notebook Utilities.
+'''Top-level package for Henchman.
 Has the following modules:
         diagnostics
         learning

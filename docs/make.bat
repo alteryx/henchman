@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=notebook_utilities
+set SPHINXPROJ=henchman
 
 if "%1" == "" goto help
 

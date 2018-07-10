@@ -10,7 +10,7 @@ import random
 
 
 class RandomSelect:
-    def __init__(self, names=[], n_feats=0):
+    def __init__(self, names=None, n_feats=0):
         self.names = []
         self.n_feats = n_feats
 
@@ -25,7 +25,7 @@ class RandomSelect:
         column_list = [i for i in range(0, len(X.columns))]
 
         random.shuffle(column_list)
-        column_list = column_list[:self.nfeatures]
+        column_list = column_list[:self.n_feats]
         all_columns = X.columns.values
         self.names = [all_columns[item] for item in column_list]
 
