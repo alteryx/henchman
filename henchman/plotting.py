@@ -142,7 +142,7 @@ def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
     tmp['starts'] = starts
     tmp['ends'] = ends
 
-    if mergepast is not None:
+    if mergepast is not None and mergepast < tmp.shape[0]:
         percent = tmp.iloc[mergepast:]['percents'].sum()
         count = tmp.iloc[mergepast:]['counts'].sum()
         start = tmp.iloc[mergepast:mergepast+1]['starts'].values
