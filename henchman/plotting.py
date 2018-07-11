@@ -13,6 +13,10 @@ from bokeh.layouts import column
 from bokeh.plotting import figure
 from bokeh.io import output_notebook
 
+from math import pi
+
+from bokeh.palettes import Category20
+
 from henchman.learning import _raw_feature_importances
 
 
@@ -110,6 +114,65 @@ def static_histogram_and_label(col, label, n_bins=10,
     plot.quad(top='label', bottom=0, left='left',
               right='right', color='purple',
               line_color='white', source=source, fill_alpha=.5)
+    return plot
+
+
+def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
+    values = col.reset_index().groupby(col.name).count()
+    total = float(col.shape[0])
+
+    counts = values[values.columns[0]].tolist()
+    percents = [x/total for x in counts]
+    tmp = pd.DataFrame({'names': values.index,
+                        'counts': counts,
+                        'percents': percents})
+    if sort:
+        tmp = tmp.sort_values(by='counts', ascending=False)
+
+    if drop_n:
+        tmp = tmp.iloc[drop_n:]
+        tmp['percents'] = tmp['percents']/tmp['percents'].sum()
+    starts = []
+    ends = []
+    loc = 0
+    for perc in tmp['percents']:
+        starts.append(loc)
+        loc += 2*pi*perc
+        ends.append(loc)
+    tmp['starts'] = starts
+    tmp['ends'] = ends
+
+    if mergepast is not None:
+        percent = tmp.iloc[mergepast:]['percents'].sum()
+        count = tmp.iloc[mergepast:]['counts'].sum()
+        start = tmp.iloc[mergepast:mergepast+1]['starts'].values
+        end = tmp.iloc[-1:]['ends'].values
+        tmp = pd.concat([tmp.iloc[:mergepast],
+                         pd.DataFrame({'names': ['Other'],
+                                       'counts': [count],
+                                       'percents': [percent],
+                                       'starts': start,
+                                       'ends': end})])
+    tmp['colors'] = [Category20[20][i % 20] for i, _ in enumerate(tmp['names'])]
+
+    return tmp
+
+
+def static_piechart(col, sort=True, mergepast=10, drop_n=None):
+    source = ColumnDataSource(_make_pie_source(col, mergepast, sort, drop_n))
+
+    plot = figure(height=500, toolbar_location=None)
+    plot.wedge(x=0, y=0,
+               radius=0.3,
+               start_angle='starts',
+               end_angle='ends',
+               line_color='white',
+               color='colors',
+               legend='names',
+               source=source)
+    plot.axis.axis_label = None
+    plot.axis.visible = False
+    plot.grid.grid_line_color = None
     return plot
 
 
