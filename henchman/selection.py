@@ -135,7 +135,7 @@ class Dendrogram():
         self.graphs = templist
 
     def transform(self, df, n_feats=10):
-        assert df.shape[1] <= n_feats
+        assert df.shape[1] >= n_feats
         step = self.find_set_of_size(n_feats)
         return df[self.features_at_step(step)]
 

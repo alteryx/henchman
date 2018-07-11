@@ -3,14 +3,20 @@
 '''The learning module. Do machine learning.
 
 Contents:
+        create_validation: A wrapper around sklearn train_test_split.
         create_model: Makes a model.
         inplace_encoder: Label encodes all columns with dtype = 'O'.
         feature_importances: Prints most important features in a model.
+        
 
 '''
 import numpy as np
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.preprocessing import LabelEncoder
+
+
+def create_holdout(X, y):
+    return train_test_split(X, y, shuffle=False)
 
 
 def _fit_predict(X_train, X_test, y_train, y_test, model, metric):
