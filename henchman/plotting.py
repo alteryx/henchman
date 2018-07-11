@@ -8,7 +8,8 @@ Contents:
 import pandas as pd
 import numpy as np
 
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Slider, RangeSlider
+from bokeh.layouts import column
 from bokeh.plotting import figure
 from bokeh.io import output_notebook
 
@@ -110,3 +111,118 @@ def static_histogram_and_label(col, label, n_bins=10,
               right='right', color='purple',
               line_color='white', source=source, fill_alpha=.5)
     return plot
+
+
+def dynamic_histogram(col):
+    def modify_doc(doc, col):
+        hover = HoverTool(
+            tooltips=[
+                ("Height", " @hist"),
+                ("Bin", " [@left{0.00}, @right{0.00})"),
+            ],
+            mode='mouse')
+
+        truncated = col[(col <= col.max()) & (col >= col.min())]
+        hist, edges = np.histogram(truncated, bins=10, density=False)
+        source = ColumnDataSource(pd.DataFrame({'hist': hist,
+                                                'left': edges[:-1],
+                                                'right': edges[1:]}
+                                               ))
+
+        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
+        plot.quad(top='hist', bottom=0,
+                  left='left', right='right',
+                  line_color='white', source=source, fill_alpha=.5)
+
+        def callback(attr, old, new):
+            truncated = col[(col < range_select.value[1]) & (col > range_select.value[0])]
+            hist, edges = np.histogram(truncated,
+                                       bins=slider.value,
+                                       density=False)
+
+            source.data = ColumnDataSource(pd.DataFrame({'hist': hist,
+                                                         'left': edges[:-1],
+                                                         'right': edges[1:]})).data
+
+        slider = Slider(start=1, end=100,
+                        value=10, step=1,
+                        title="Bins")
+        slider.on_change('value', callback)
+
+        range_select = RangeSlider(start=col.min(),
+                                   end=col.max(),
+                                   value=(col.min(), col.max()),
+                                   step=5, title='Histogram Range')
+        range_select.on_change('value', callback)
+
+        doc.add_root(column(slider, range_select, plot))
+
+    return lambda doc: modify_doc(doc, col)
+
+
+def dynamic_histogram_and_label(col, label, normalized=True):
+    def modify_doc(doc, col, label, normalized):
+
+        truncated = col[(col <= col.max()) & (col >= col.min())]
+        hist, edges = np.histogram(truncated, bins=10, density=normalized)
+        cols = pd.DataFrame({'col': col, 'label': label})
+
+        label_hist = np.nan_to_num(cols['label'].groupby(
+            pd.cut(col, edges, right=False)).sum().values, 0)
+        if normalized:
+            label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+        source = ColumnDataSource(pd.DataFrame({'hist': hist,
+                                                'left': edges[:-1],
+                                                'right': edges[1:],
+                                                'label': label_hist}))
+        if normalized:
+            hover = HoverTool(
+                tooltips=[
+                    ("Bin", " [@left{0.00}, @right{0.00})"),
+                ],
+                mode='mouse')
+        else:
+            hover = HoverTool(
+                tooltips=[
+                    ("Height", " @hist"),
+                    ("Bin", " [@left{0.00}, @right{0.00})"),
+                ],
+                mode='mouse')
+
+        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
+        plot.quad(top='hist', bottom=0, left='left',
+                  right='right', line_color='white',
+                  source=source, fill_alpha=.5)
+        plot.quad(top='label', bottom=0, left='left',
+                  right='right', color='purple',
+                  line_color='white', source=source, fill_alpha=.5)
+
+        def callback(attr, old, new):
+
+            truncated = col[(col < range_select.value[1]) & (col > range_select.value[0])]
+
+            hist, edges = np.histogram(truncated,
+                                       bins=slider.value,
+                                       density=normalized)
+            label_hist = np.nan_to_num(cols['label'].groupby(
+                pd.cut(col, edges, right=False)).sum().values, 0)
+
+            if normalized:
+                label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+
+            source.data = ColumnDataSource(pd.DataFrame({'hist': hist,
+                                                         'left': edges[:-1],
+                                                         'right': edges[1:],
+                                                         'label': label_hist})).data
+
+        slider = Slider(start=1, end=100, value=10, step=1, title="Bins")
+        slider.on_change('value', callback)
+
+        range_select = RangeSlider(start=col.min(),
+                                   end=col.max(),
+                                   value=(col.min(), col.max()),
+                                   step=5, title='Histogram Range')
+        range_select.on_change('value', callback)
+
+        doc.add_root(column(slider, range_select, plot))
+    return lambda doc: modify_doc(doc, col, label, normalized)
