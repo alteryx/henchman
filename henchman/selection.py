@@ -8,6 +8,7 @@ Contents:
 '''
 import numpy as np
 import pandas as pd
+import math
 import random
 
 from tqdm import tqdm
@@ -70,8 +71,11 @@ class Dendrogram():
     def _build_graphs(self):
         if self.graphs == []:
             self._find_all_graphs()
-        for i, name in enumerate(self.graphs):
-            if len(name) == 1:
+        for i, graph in enumerate(self.graphs):
+            if len(graph) == 1:
+                break
+            if len(graph) == len(self.columns) and i > 0:
+                i += -1
                 break
         self.threshlist = self.threshlist[:i]
         self.edges = self.edges[:i]
@@ -86,8 +90,11 @@ class Dendrogram():
             print('Calculating more than 500 graphs')
             print('You can pass max_threshes as a kwarg to Dendrogram')
         if max_threshes is not None:
-            while len(uniques) > max_threshes:
-                uniques = uniques[::2]
+            if len(uniques) > max_threshes:
+                # Strip nans
+                uniques = [x for x in uniques if not math.isnan(x)]
+                # Take max_threshes evenly spaced thresholds
+                uniques = uniques[::(len(uniques)/max_threshes + 1)]
 
         self.threshlist = uniques
 
@@ -120,7 +127,7 @@ class Dendrogram():
                     print("You might also be interested in"
                           " {} components at step {}".format(prevlength, i - 1))
                 return i
-        print("Warning, could not find requested size, returning last graph")
+        print("Warning, could not find requested size, returning set of size {}".format(len(self.graphs[-1])))
         return (len(self.graphs) - 1)
 
     def _shuffle_all_representatives(self):
