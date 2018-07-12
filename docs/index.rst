@@ -1,4 +1,4 @@
-Welcome to Henchman's documentation!
+Welcome to the Henchman documentation!
 ======================================
 
 .. toctree::
@@ -8,10 +8,10 @@ Welcome to Henchman's documentation!
    readme
    installation
    usage
-   modules
    contributing
    authors
    history
+   reference
 
 Indices and tables
 ==================

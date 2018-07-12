@@ -87,11 +87,13 @@ def _find_high_card(data, card_thresh):
 
 def warnings(data, corr_thresh=.9, missing_thresh=.1, card_thresh=50):
     '''Warn about common dataset problems.
+
     Input:
         data (df): The dataframe to warn about.
         corr_thresh (float): Warn above this threshold (Default .9)
         missing_thresh (float): Warn above this threshold (Default .1)
         card_thresh (int): Warn above this threshold (Default 50).
+
     '''
     title('Warnings')
     _find_duplicates(data)
@@ -180,12 +182,14 @@ def column_report(data):
 
 
 def profile(data, corr_thresh=.9, missing_thresh=.1, card_thresh=50):
-    '''Profile dataset.
+    '''Use all diagnostic functions on a dataframe.
+
     Input:
         data (df): The dataframe to profile.
         corr_thresh (float): Warn above this threshold (Default .9)
         missing_thresh (float): Warn above this threshold (Default .1)
         card_thresh (int): Warn above this threshold (Default 50).
+
     '''
     overview(data)
     warnings(data, corr_thresh, missing_thresh, card_thresh)

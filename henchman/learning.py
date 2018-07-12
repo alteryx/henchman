@@ -37,6 +37,7 @@ def _score_tt(X, y, model, metric):
 
 def create_model(X, y, model=None, metric=None, n_splits=1):
     '''Make a model from X and y. Returns a scorelist and a fit model.
+
     Input:
         X (df): A cleaned numeric feature matrix
         y (series): A column of labels
@@ -71,8 +72,10 @@ def inplace_encoder(X):
 
     Input:
         X (df): The dataframe to encode
+
     Output:
         X (df): An encoded dataframe
+
     '''
     for col in X:
         if X[col].dtype == 'O':
@@ -90,6 +93,17 @@ def _raw_feature_importances(X, model):
 
 
 def feature_importances(X, model, n_feats=5):
+    '''Print a list of important features.
+
+    Input:
+        X (pd.DataFrame): The dataframe from which the features are drawn.
+        model (sklearn.ensemble): Any model with a `feature_importances_` attribute
+        n_feats (int): Number of highest importances features.
+
+    Output:
+        feature_list: A list of n column names.
+
+    '''
     feature_imps = _raw_feature_importances(X, model)
     for i, f in enumerate(feature_imps[0:n_feats]):
         print('{}: {} [{:.3f}]'.format(i + 1, f[1], f[0]/feature_imps[0][0]))

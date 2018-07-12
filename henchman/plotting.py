@@ -22,9 +22,11 @@ from henchman.learning import _raw_feature_importances
 
 def feature_importances(X, model, n_feats=5):
     '''Plot feature importances.
+
     Input:
-        raw_feature_imps (list[tuple[float, str]]): Complete list of
-                feature importances.
+        raw_feature_imps (list[tuple[float, str]]): Complete list of feature importances.
+        n_feats (int): The number of features to plot.
+
     '''
     feature_imps = _raw_feature_importances(X, model)
     features = [f[1] for f in feature_imps[0:n_feats]][::-1]
@@ -153,7 +155,8 @@ def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
                                        'percents': [percent],
                                        'starts': start,
                                        'ends': end})])
-    tmp['colors'] = [Category20[20][i % 20] for i, _ in enumerate(tmp['names'])]
+    tmp['colors'] = [Category20[20][i % 20]
+                     for i, _ in enumerate(tmp['names'])]
 
     return tmp
 
@@ -198,7 +201,8 @@ def dynamic_histogram(col):
                   line_color='white', source=source, fill_alpha=.5)
 
         def callback(attr, old, new):
-            truncated = col[(col < range_select.value[1]) & (col > range_select.value[0])]
+            truncated = col[(col < range_select.value[1]) &
+                            (col > range_select.value[0])]
             hist, edges = np.histogram(truncated,
                                        bins=slider.value,
                                        density=False)
@@ -233,7 +237,8 @@ def dynamic_histogram_and_label(col, label, normalized=True):
         label_hist = np.nan_to_num(cols['label'].groupby(
             pd.cut(col, edges, right=False)).sum().values, 0)
         if normalized:
-            label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+            label_hist = label_hist / \
+                (label_hist.sum() * (edges[1] - edges[0]))
         source = ColumnDataSource(pd.DataFrame({'hist': hist,
                                                 'left': edges[:-1],
                                                 'right': edges[1:],
@@ -262,7 +267,8 @@ def dynamic_histogram_and_label(col, label, normalized=True):
 
         def callback(attr, old, new):
 
-            truncated = col[(col < range_select.value[1]) & (col > range_select.value[0])]
+            truncated = col[(col < range_select.value[1]) &
+                            (col > range_select.value[0])]
 
             hist, edges = np.histogram(truncated,
                                        bins=slider.value,
@@ -271,7 +277,8 @@ def dynamic_histogram_and_label(col, label, normalized=True):
                 pd.cut(col, edges, right=False)).sum().values, 0)
 
             if normalized:
-                label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+                label_hist = label_hist / \
+                    (label_hist.sum() * (edges[1] - edges[0]))
 
             source.data = ColumnDataSource(pd.DataFrame({'hist': hist,
                                                          'left': edges[:-1],
