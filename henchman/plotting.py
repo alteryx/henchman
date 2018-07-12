@@ -209,6 +209,43 @@ def static_scatterplot(col1, col2, hover=True):
     return p
 
 
+def _make_scatter_label_source(col1, col2, label):
+    tmp = pd.DataFrame({col1.name: col1, col2.name: col2, label.name: label})
+    tmp['pairs'] = tmp.apply(lambda row: (row[0], row[1], row[2]), axis=1)
+    source = tmp
+
+    source['x'] = source[col1.name]
+    source['y'] = source[col2.name]
+    source['label'] = source[label.name]
+
+    label_to_int = {name: i for i, name in enumerate(label.unique())}
+    colors = [Category20[20][label_to_int[value] % 20 + 1] for value in source['label']]
+
+    source['color'] = colors
+    return source
+
+
+def static_scatterplot_and_label(col1, col2, label, hover=False):
+    source = ColumnDataSource(_make_scatter_label_source(col1, col2, label))
+    tools = ['box_zoom', 'reset']
+    if hover:
+        hover = HoverTool(tooltips=[
+            (col1.name, '@x'),
+            (col2.name, '@y'),
+            (label.name, '@label'),
+        ])
+        tools += [hover]
+
+    plot = figure(tools=tools)
+    plot.scatter(x='x',
+                 y='y',
+                 color='color',
+                 legend='label',
+                 source=source,
+                 alpha=.8)
+    return plot
+
+
 def dynamic_histogram(col):
     def modify_doc(doc, col):
         hover = HoverTool(
