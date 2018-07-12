@@ -8,8 +8,9 @@ Contents:
 import pandas as pd
 import numpy as np
 
-from bokeh.models import ColumnDataSource, HoverTool, Slider, RangeSlider
-from bokeh.layouts import column
+from bokeh.models import (ColumnDataSource, HoverTool,
+                          Slider, RangeSlider, CheckboxGroup)
+from bokeh.layouts import column, row
 from bokeh.plotting import figure
 from bokeh.io import output_notebook
 
@@ -296,3 +297,46 @@ def dynamic_histogram_and_label(col, label, normalized=True):
 
         doc.add_root(column(slider, range_select, plot))
     return lambda doc: modify_doc(doc, col, label, normalized)
+
+
+def dynamic_piechart(col):
+
+    def modify_doc(doc, col):
+        source = ColumnDataSource(_make_pie_source(col))
+        plot = figure(height=500, toolbar_location=None)
+        plot.wedge(x=0, y=0,
+                   radius=0.3,
+                   start_angle='starts',
+                   end_angle='ends',
+                   line_color='white',
+                   color='colors',
+                   legend='names',
+                   source=source)
+        plot.axis.axis_label = None
+        plot.axis.visible = False
+        plot.grid.grid_line_color = None
+
+        def callback(attr, old, new):
+
+            source.data = ColumnDataSource(
+                _make_pie_source(col,
+                                 sort=sorted_button.active,
+                                 mergepast=merge_slider.value,
+                                 drop_n=drop_slider.value)).data
+        sorted_button = CheckboxGroup(
+            labels=["Sorted"], active=[0, 1])
+        sorted_button.on_change('active', callback)
+
+        merge_slider = Slider(start=1, end=col.nunique(),
+                              value=col.nunique(), step=1,
+                              title="Merge Slider")
+        merge_slider.on_change('value', callback)
+        drop_slider = Slider(start=0, end=col.nunique(),
+                             value=0, step=1,
+                             title="Drop Slider")
+        drop_slider.on_change('value', callback)
+
+        doc.add_root(
+            column(row(column(merge_slider, drop_slider), sorted_button), plot))
+
+    return lambda doc: modify_doc(doc, col)
