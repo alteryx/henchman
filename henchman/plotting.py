@@ -9,16 +9,62 @@ import pandas as pd
 import numpy as np
 
 from bokeh.models import (ColumnDataSource, HoverTool,
-                          Slider, RangeSlider, CheckboxGroup)
+                          Slider, RangeSlider, CheckboxGroup,
+                          Range1d)
 from bokeh.layouts import column, row
 from bokeh.plotting import figure
 from bokeh.io import output_notebook
+from bokeh.io.export import get_screenshot_as_png
+import bokeh.io as io
 
 from math import pi
 
 from bokeh.palettes import Category20
 
 from henchman.learning import _raw_feature_importances
+
+
+def show(plot, png=False,
+         width=None, height=None,
+         title=None, x_axis=None, y_axis=None,
+         x_range=None, y_range=None):
+    '''Format and show a bokeh plot.
+    Setting attributes only works for static plots. Default is None
+    unless stated otherwise.
+
+    Input:
+        plot (bokeh.figure or doc): The plot to show.
+        png (bool): If True, return a png of the plot. Default is False
+        width (int, optional): Plot width.
+        height (int, optional): Plot height.
+        title (str, optional): The title for the plot.
+        x_axis (str, optional): The x_axis label.
+        y_axis (str, optional): The y_axis label.
+        x_range (tuple[int, int], optional): A min and max x value to plot.
+        y_range (tuple[int, int], optional): A min and max y value to plot.
+    '''
+    output_notebook()
+    if width is not None:
+        plot.width = width
+    if height is not None:
+        plot.height = height
+
+    if title is not None:
+        plot.title.text = title
+    if x_axis is not None:
+        plot.xaxis.axis_label = x_axis
+    if y_axis is not None:
+        plot.yaxis.axis_label = y_axis
+
+    if x_range is not None:
+        plot.x_range = Range1d(x_range[0], x_range[1])
+    if y_range is not None:
+        plot.y_range = Range1d(y_range[0], y_range[1])
+
+    if png:
+        return get_screenshot_as_png(plot, driver=None)
+
+    return io.show(plot)
 
 
 def feature_importances(X, model, n_feats=5):
@@ -368,7 +414,9 @@ def dynamic_histogram_and_label(col, label, normalized=True):
 def dynamic_piechart(col):
 
     def modify_doc(doc, col):
-        source = ColumnDataSource(_make_pie_source(col))
+        n_values = col.nunique()
+        source = ColumnDataSource(_make_pie_source(col,
+                                                   mergepast=n_values))
         plot = figure(height=500, toolbar_location=None)
         plot.wedge(x=0, y=0,
                    radius=0.3,
@@ -393,16 +441,21 @@ def dynamic_piechart(col):
             labels=["Sorted"], active=[0, 1])
         sorted_button.on_change('active', callback)
 
-        merge_slider = Slider(start=1, end=col.nunique(),
-                              value=col.nunique(), step=1,
+        merge_slider = Slider(start=1, end=n_values,
+                              value=n_values, step=1,
                               title="Merge Slider")
         merge_slider.on_change('value', callback)
-        drop_slider = Slider(start=0, end=col.nunique(),
+        drop_slider = Slider(start=0, end=n_values,
                              value=0, step=1,
                              title="Drop Slider")
         drop_slider.on_change('value', callback)
 
         doc.add_root(
-            column(row(column(merge_slider, drop_slider), sorted_button), plot))
+            column(
+                row(
+                    column(merge_slider, drop_slider), sorted_button
+                ),
+                plot
+            ))
 
     return lambda doc: modify_doc(doc, col)
