@@ -180,6 +180,35 @@ def static_piechart(col, sort=True, mergepast=10, drop_n=None):
     return plot
 
 
+def _make_scatter_source(col1, col2):
+    tmp = pd.DataFrame(col1, col2).reset_index()
+    tmp['pairs'] = tmp.apply(lambda row: (row[0], row[1]), axis=1)
+    source = pd.DataFrame(tmp.groupby('pairs').first())
+    source['count'] = tmp.groupby('pairs').count().iloc[:, 1]
+    source['x'] = source[col1.name]
+    source['y'] = source[col2.name]
+    return source
+
+
+def static_scatterplot(col1, col2, hover=True):
+    source = ColumnDataSource(_make_scatter_source(col1, col2))
+    tools = ['box_zoom', 'reset']
+    if hover:
+        hover = HoverTool(tooltips=[
+            (col1.name, '@x'),
+            (col2.name, '@y'),
+            ('count', '@count'),
+        ])
+        tools += [hover]
+
+    p = figure(tools=tools)
+    p.scatter(x='x',
+              y='y',
+              source=source,
+              alpha=.5)
+    return p
+
+
 def dynamic_histogram(col):
     def modify_doc(doc, col):
         hover = HoverTool(
