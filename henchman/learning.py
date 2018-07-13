@@ -38,6 +38,13 @@ def _fit_predict(X_train, X_test, y_train, y_test, model, metric):
     return metric(y_test, preds), model
 
 
+def _get_dataframes(model, metric):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=split_size)
+    model = model
+    model.fit(X_train, y_train)
+    return y_test, model.predict_proba(X_test)
+
+
 def _score_tt(X, y, model, metric, split_size):
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=split_size)
     score, fit_model = _fit_predict(X_train, X_test,
@@ -45,7 +52,8 @@ def _score_tt(X, y, model, metric, split_size):
     return [score], fit_model
 
 
-def create_model(X, y, model=None, metric=None, n_splits=1, split_size=.3):
+def create_model(X, y, model=None, metric=None,
+                 n_splits=1, split_size=.3, _return_df=False):
     '''Make a model. Returns a scorelist and a fit model.
     A wrapper around a standard scoring workflow. Uses
     train_test_split unless otherwise specified(in which case
@@ -56,13 +64,15 @@ def create_model(X, y, model=None, metric=None, n_splits=1, split_size=.3):
     recommended you just use the sklearn API.
 
     Args:
-        X(pd.DataFrame): A cleaned numeric feature matrix.
-        y(pd.Series): A column of labels.
+        X (pd.DataFrame): A cleaned numeric feature matrix.
+        y (pd.Series): A column of labels.
         model: A sklearn model with fit and predict methods.
         metric: A metric which takes y_test, preds and returns a score.
-        n_splits(int): If 1 use a train_test_split. Otherwise use tssplit.
+        n_splits (int): If 1 use a train_test_split. Otherwise use tssplit.
                 Default value is 1.
-        split_size(float): Size of testing set. Default is .3.
+        split_size (float): Size of testing set. Default is .3.
+        _return_df (bool): If true, return (X_train, X_test, y_train, y_test) after returns.
+                Not generally useful, but sometimes necessary.
 
     Returns:
         scores, fit_model(list[float], sklearn.ensemble): A list of scores and a fit model.
@@ -83,6 +93,8 @@ def create_model(X, y, model=None, metric=None, n_splits=1, split_size=.3):
     assert model is not None
     assert metric is not None
     if n_splits == 1:
+        if _return_df:
+            return _score_tt(X, y, model, metric, split_size), create_holdout(X, y, split_size)
         return _score_tt(X, y, model, metric, split_size)
 
     if n_splits > 1:
@@ -95,6 +107,8 @@ def create_model(X, y, model=None, metric=None, n_splits=1, split_size=.3):
             score, fit_model = _fit_predict(X_train, X_test,
                                             y_train, y_test, model, metric)
             scorelist.append(score)
+        if _return_df:
+            return scorelist, fit_model, (X_train, X_test, y_train, y_test)
         return scorelist, fit_model
 
 

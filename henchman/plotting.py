@@ -22,6 +22,10 @@ from math import pi
 from bokeh.palettes import Category20
 
 from henchman.learning import _raw_feature_importances
+from henchman.learning import create_model
+
+from sklearn.metrics import (roc_auc_score, precision_score,
+                             recall_score, f1_score, roc_curve)
 
 
 def show_template():
@@ -600,3 +604,39 @@ def dynamic_piechart(col):
             ))
 
     return lambda doc: modify_doc(doc, col)
+
+
+# def plot_roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=3):
+#     scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+
+#     probs = model.predict_proba(df_list[1])
+#     fpr, tpr, thresholds = roc_curve(df_list[3],
+#                                      probs[:, prob_col],
+#                                      pos_label=pos_label)
+
+#     p = figure()
+#     p.line(x=fpr, y=tpr)
+#     p.title.text = 'Receiver operating characteristic'
+#     p.xaxis.axis_label = 'False Positive Rate'
+#     p.yaxis.axis_label = 'True Positive Rate'
+
+#     p.line(x=fpr, y=fpr, color='red', line_dash='dashed')
+#     return(p)
+
+
+# def plot_f1(X, y, model, nprecs, n_splits=3):
+#     scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+#     probs = model.predict_proba(df_list[1])
+#     threshes = [x/1000. for x in range(50, nprecs)]
+#     precisions = [precision_score(df_list[3], probs[:, 1] > t) for t in threshes]
+#     recalls = [recall_score(df_list[3], probs[:, 1] > t) for t in threshes]
+#     fones = [f1_score(df_list[3], probs[:, 1] > t) for t in threshes]
+
+#     output_notebook()
+#     p = figure()
+#     p.line(x=threshes, y=precisions, color='green', legend='precision')
+#     p.line(x=threshes, y=recalls, color='blue', legend='recall')
+#     p.line(x=threshes, y=fones, color='red', legend='f1')
+#     p.xaxis.axis_label = 'Threshold'
+#     p.title.text = 'Precision, Recall, and F1 by Threshold'
+#     return(p)
