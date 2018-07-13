@@ -6,12 +6,9 @@ Welcome to the Henchman documentation!
    :caption: Contents:
 
    readme
-   installation
-   usage
+   documentation
    contributing
    authors
-   history
-   reference
 
 Indices and tables
 ==================

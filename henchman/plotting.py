@@ -24,15 +24,34 @@ from bokeh.palettes import Category20
 from henchman.learning import _raw_feature_importances
 
 
+def show_template():
+    '''Prints a template for `show`.
+    '''
+    print('show(plot,\n'
+          '     png=False,\n'
+          '     width=None,\n'
+          '     height=None,\n'
+          '     title=\'Temporary title\',\n'
+          '     x_axis=\'my xaxis name\',\n'
+          '     y_axis=\'my yaxis name\',\n'
+          '     x_range=(0, 10) or None,\n'
+          '     y_range=(0, 10) or None)\n')
+    return None
+
+
 def show(plot, png=False,
          width=None, height=None,
          title=None, x_axis=None, y_axis=None,
          x_range=None, y_range=None):
     '''Format and show a bokeh plot.
-    Setting attributes only works for static plots. Default is None
-    unless stated otherwise.
+    This is a wrapper around bokeh show which can add common
+    plot attributes like height, axis labels and whether or not
+    you would like the output as a png. This function also runs
+    the bokeh function ``output_notebook()`` to start.
 
-    Input:
+    You can get a full list of options by function with ``show_template()``.
+
+    Args:
         plot (bokeh.figure or doc): The plot to show.
         png (bool): If True, return a png of the plot. Default is False
         width (int, optional): Plot width.
@@ -42,6 +61,21 @@ def show(plot, png=False,
         y_axis (str, optional): The y_axis label.
         x_range (tuple[int, int], optional): A min and max x value to plot.
         y_range (tuple[int, int], optional): A min and max y value to plot.
+
+    Example:
+        >>> import henchman.plotting as hplot
+        >>> hplot.show_template()
+        show(plot,
+             png=False,
+             width=None,
+             height=None,
+             title='Temporary title',
+             x_axis='my xaxis name',
+             y_axis='my yaxis name',
+             x_range=(0, 10) or None,
+             y_range=(0, 10) or None)
+
+        >>> hplot.show(plot, width=500, title='My Plot Title')
     '''
     output_notebook()
     if width is not None:
@@ -70,9 +104,15 @@ def show(plot, png=False,
 def feature_importances(X, model, n_feats=5):
     '''Plot feature importances.
 
-    Input:
-        raw_feature_imps (list[tuple[float, str]]): Complete list of feature importances.
+    Args:
+        X (pd.DataFrame): A dataframe with which you have trained.
+        model: Any fit model with a ``feature_importances_`` attribute.
         n_feats (int): The number of features to plot.
+
+    Example:
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.feature_importances(X, model, n_feats=10)
+        >>> hplot.show(plot)
 
     '''
     feature_imps = _raw_feature_importances(X, model)
@@ -99,6 +139,22 @@ def feature_importances(X, model, n_feats=5):
 def static_histogram(col, n_bins=10,
                      col_max=None,
                      col_min=None):
+    '''Creates a static bokeh histogram.
+    User can modify the number of bins and column bounds.
+
+    Args:
+        col (pd.Series): The column from which to make a histogram.
+        n_bins (int): The number of bins of the histogram.
+        col_max (float): Maximum value to include in histogram.
+        col_min (float): Minimum value to include in histogram
+
+    Example:
+        If the dataframe ``X`` has a column named ``amount``:
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.static_histogram(X['amount'])
+        >>> hplot.show(plot)
+    '''
     hover = HoverTool(
         tooltips=[
             ("Height", " @hist"),
@@ -126,6 +182,33 @@ def static_histogram(col, n_bins=10,
 def static_histogram_and_label(col, label, n_bins=10,
                                col_max=None, col_min=None,
                                normalized=True):
+    '''Creates a static bokeh histogram with binary label.
+    You can use this function to see how a binary label compares with
+    a particular attribute. Can set number of bins, column bounds
+    and whether or not to normalize both functions. Normalizing will
+    lose exact values but can sometimes make the columns easier
+    to compare.
+
+    Args:
+        col (pd.Series): The column from which to make a histogram.
+        label (pd.Series): A binary label that you would like to track.
+        n_bins (int): The number of bins of the histogram.
+        col_max (float): Maximum value to include in histogram.
+        col_min (float): Minimum value to include in histogram
+
+    Example:
+        If the dataframe ``X`` has a column named ``amount`` and
+        a label ``y``, you can compare them with
+
+        >>> import henchman.plotting as hplot
+        >>> plot1 = hplot.static_histogram_and_label(X['amount'], y)
+        >>> hplot.show(plot1)
+
+        If you want the raw number of positive labels in each bin, set normalized
+
+        >>> plot2 = hplot.static_histogram_and_label(X['amount'], y, normalized=False)
+        >>> hplot.show(plot2)
+    '''
     if col_max is None:
         col_max = col.max()
     if col_min is None:
@@ -209,6 +292,25 @@ def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
 
 
 def static_piechart(col, sort=True, mergepast=10, drop_n=None):
+    '''Creates a static piechart.
+    Finds all of the unique values in a column and makes a piechart
+    out of them. By default, the chart will be sorted and merge together
+    any values past the 10th most common.
+
+    Args:
+        col (pd.Series): The column from which to make the piechart.
+        sort (bool): Whether or not to sort by frequency. Default is True.
+        mergepast (int): Merge infrequent column values. Default is 10.
+        drop_n (int): How many high frequency values to drop. Default is None.
+
+    Example:
+        If the dataframe ``X`` has a column named ``car_color``:
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.static_piechart(X['car_color'], sort=False, mergepast=None)
+        >>> hplot.show(plot)
+    '''
+
     source = ColumnDataSource(_make_pie_source(col, mergepast, sort, drop_n))
 
     plot = figure(height=500, toolbar_location=None)
@@ -237,6 +339,24 @@ def _make_scatter_source(col1, col2):
 
 
 def static_scatterplot(col1, col2, hover=True):
+    '''Creates a static scatterplot.
+    Plots two numeric variables against one another. In this function,
+    we only take one from each numeric pair and count how many times it
+    appears in the data.
+
+
+    Args:
+        col1 (pd.Series): The column to use for the x_axis.
+        col2 (pd.Series): The column to use for the y_axis.
+        hover (bool): Whether or not to include the hover tooltip. Default is True.
+
+    Example:
+        If the dataframe ``X`` has columns named ``amount`` and ``num_purchases``:
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.static_scatterplot(X['num_purchases'], X['amount'])
+        >>> hplot.show(plot)
+    '''
     source = ColumnDataSource(_make_scatter_source(col1, col2))
     tools = ['box_zoom', 'reset']
     if hover:
@@ -272,6 +392,27 @@ def _make_scatter_label_source(col1, col2, label):
 
 
 def static_scatterplot_and_label(col1, col2, label, hover=False):
+    '''Creates a static scatterplot with label information.
+    Plots two numeric variables against one another colors
+    the results by a binary label. This can give information on if
+    these two columns are related to a label. Unlike static_scatterplot,
+    this function does not start by reducing to unique values.
+    Use the hovertool at your own risk.
+
+    Args:
+        col1 (pd.Series): The column to use for the x_axis.
+        col2 (pd.Series): The column to use for the y_axis.
+        label (pd.Series): The binary label.
+        hover (bool): Whether or not to include the hover tooltip. Default is False.
+
+    Example:
+        If the dataframe ``X`` has columns named ``amount``
+        and ``num_purchases`` with a binary label ``y``:
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.static_scatterplot_and_label(X['num_purchases'], X['amount'], y)
+        >>> hplot.show(plot)
+    '''
     source = ColumnDataSource(_make_scatter_label_source(col1, col2, label))
     tools = ['box_zoom', 'reset']
     if hover:

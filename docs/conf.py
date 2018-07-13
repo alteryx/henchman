@@ -33,8 +33,15 @@ import henchman
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.napoleon',
               'sphinx.ext.viewcode',
-              'sphinx.ext.autosummary']
+              'sphinx.ext.autosummary',
+              'IPython.sphinxext.ipython_console_highlighting',
+              'IPython.sphinxext.ipython_directive']
+
+ipython_execlines = ["import pandas as pd",
+                     "pd.set_option('display.width', 1000000)"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,7 +58,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Henchman'
 copyright = u"2018, Feature Labs Team"
-author = u"Feature Labs Team"
+author = u"Seth Rothschild"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -69,7 +76,7 @@ release = henchman.__version__
 # Usually you set "language" from the command line for these cases.
 language = None
 
-autosummary_generate = ["reference.rst"]
+autosummary_generate = ["documentation.rst"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

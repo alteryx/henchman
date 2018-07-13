@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
 '''The diagnostics module. Describe a particular dataset.
-
-Contents:
-        overview (df): Describe the shape, NaNs and Memory usage
-        warnings (df): Find dups, corrs and high dim categoricals
-        column_report (df): Describe all columns according to pandas dtype
-        profile (df): Do the above 3 functions.
 '''
 import numpy as np
 import pandas as pd
@@ -27,6 +21,18 @@ def subtitle(string):
 
 
 def overview(data):
+    '''Give a brief data overview.
+    Contains information about data shape, missing values,
+    memory usage and data types of columns.
+
+    Args:
+        data (pd.DataFrame): The dataframe for which to give an overview.
+
+    Example:
+        >>> from henchman.diagnostics import overview
+        >>> overview(df)
+
+    '''
     title('Data Shape')
     print('Number of columns: {}'.format(data.shape[1]))
     print('Number of rows: {}'.format(data.shape[0]))
@@ -87,13 +93,19 @@ def _find_high_card(data, card_thresh):
 
 def warnings(data, corr_thresh=.9, missing_thresh=.1, card_thresh=50):
     '''Warn about common dataset problems.
+    Checks for duplicates, highly linearly correlated columns,
+    columns with many missing values and categorical columns
+    with many unique values.
 
-    Input:
-        data (df): The dataframe to warn about.
+    Args:
+        data (pd.DataFrame): The dataframe to warn about.
         corr_thresh (float): Warn above this threshold (Default .9)
         missing_thresh (float): Warn above this threshold (Default .1)
         card_thresh (int): Warn above this threshold (Default 50).
 
+    Example:
+        >>> from henchman.diagnostics import warnings
+        >>> warnings(df, corr_thresh=.5)
     '''
     title('Warnings')
     _find_duplicates(data)
@@ -166,6 +178,19 @@ def _numeric_column_summary(data, numbers):
 
 
 def column_report(data):
+    '''Give column summaries according to pandas dtype.
+    Has functionality for objects, times, booleans and numeric
+    columns. Finds maximums, minimums, means, missing and other
+    datatype appropriate attributes.
+
+    Args:
+        data (pd.DataFrame): The dataframe on which to report.
+
+    Example:
+        >>> from henchman.diagnostics import column_report
+        >>> column_report(df)
+
+    '''
     objects = [col for col in data if data[col].dtype == 'O']
     times = [col for col in data if data[col].dtype == '<M8[ns]']
     bools = [col for col in data if data[col].dtype == 'bool']
@@ -182,13 +207,19 @@ def column_report(data):
 
 
 def profile(data, corr_thresh=.9, missing_thresh=.1, card_thresh=50):
-    '''Use all diagnostic functions on a dataframe.
+    '''Profile dataset.
+    Gives a dataset overview, writes the warnings and reports
+    on all columns.
 
-    Input:
-        data (df): The dataframe to profile.
+    Args:
+        data (pd.DataFrame): The dataframe to profile.
         corr_thresh (float): Warn above this threshold (Default .9)
         missing_thresh (float): Warn above this threshold (Default .1)
-        card_thresh (int): Warn above this threshold (Default 50).
+        card_thresh (int): Warn above this threshold (Default 50)
+
+    Example:
+        >>> from henchman.diagnostics import profile
+        >>> profile(df, missing_thresh=.3, card_thresh=10)
 
     '''
     overview(data)
