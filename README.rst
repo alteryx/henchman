@@ -1,38 +1,56 @@
-Henchman
+Overview
 =============
 A collection of utility functions for making demo notebooks.
 
-* Free software: GNU General Public License v3
-* Documentation: https://notebook-utilities.readthedocs.io.
+* Free software: BSD-3
 
-To install the development version with pip: 
+The Henchman package is a collection of frequently used utility functions for Featuretools demos. There are a number of functions which appear in multiple `utils.py` files in multiple demos. This project consolidates those into 4 categories of reusable functions: `dataframe diagnostics <documentation.html#diagnostics>`_, `feature selection
+<documentation.html#selection>`_, `machine learning <documentation.html#learning>`_ and `bokeh plotting <documentation.html#plotting>`_.
 
-1. download the repository 
-2. open a terminal and navigate to the downloaded folder
-3. run ``pip install -e .``
+Install
+~~~~~~~~~
+To install Henchman, run this command in your terminal:
 
-Functionality
-~~~~~~~~~~~~~
+.. code-block:: console
 
-The Henchman package is a collection of frequently used utility functions for Featuretools demos. There are a number of functions which appear in multiple `utils.py` files in multiple demos. This project consolidates those into 4 categories of reusable functions.
+    $ pip install henchman
 
-Diagnostics
------------
-It's often useful to have an all-at-once overview of what is going on in a particular dataframe or feature matrix. The diagnostics module gives basic print functionality for many commonly asked questions. You can import the ``profile`` function with ``from henchman.diagnostics import profile``.
+This is the preferred method to install Henchman, as it will always install the most recent stable release.
 
-Selection
----------
-Given the number of features that Featuretools is capable of creating, it's worthwhile having some easily usable feature selection techniques. This module provides a wrapper around some scikit-learn methods.
+If you don't have `pip`_ installed, this `Python installation guide`_ can guide
+you through the process.
 
-Learning
---------
-We reuse the same workflow in multiple demos once we have transformed our feature matrix into an ``X`` and ``y``. The ``create_model`` function gives a basic validation split and scores according to a provided model and metric. To use, import with ``from henchman.learning import create_model``.
+.. _pip: https://pip.pypa.io
+.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
 
-Plotting
---------
-It's usually preferable to look at a plot than a dataframe, but it can take a lot of time to make a perfect looking plot. This module gives a simple interface for certain plots that we know we'll need often.
+The sources for Henchman can be downloaded from the `Github repo`_.
 
-Credits
-~~~~~~~
+You can either clone the public repository:
 
-This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) project template.
+.. code-block:: console
+
+    $ git clone git://github.com/featurelabs/henchman
+
+Or download the `tarball`_:
+
+.. code-block:: console
+
+    $ curl  -OL https://github.com/featurelabs/henchman/tarball/master
+
+Once you have a copy of the source, you can install it with:
+
+.. code-block:: console
+
+    $ python setup.py install
+
+
+.. _Github repo: https://github.com/featurelabs/henchman
+.. _tarball: https://github.com/featurelabs/henchman/tarball/master
+
+
+
+
+
+
+
+

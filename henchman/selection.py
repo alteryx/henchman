@@ -3,8 +3,8 @@
 '''The selection module.
 
 Contents:
-        RandomSelect (df, n_feats): Choose n_feats at random
-        Dendrogram (df, pairing_func, max_threshes)
+        RandomSelect (X, n_feats): Choose n_feats at random
+        Dendrogram (X, pairing_func, max_threshes)
 '''
 import numpy as np
 import pandas as pd
@@ -17,16 +17,29 @@ from collections import defaultdict
 
 class RandomSelect:
     def __init__(self, names=None, n_feats=0):
+        '''A class for randomly choosing a feature set.
+
+        Args:
+            names (list[str]): A list of column names selected. Default is the empty list.
+            n_feats (int): The number of features to randomly select.
+        '''
         self.names = []
         self.n_feats = n_feats
 
     def set_params(self, **params):
-        # Set parameters of smartselect to **params
+        '''Method to functionally assign parameters.
+        Expects a dictionary **params as input.
+        '''
         for key in params:
             setattr(self, key, params[key])
         return self
 
     def fit(self, X, x=None):
+        '''Randomly choose which features to select.
+        Args:
+            X (pd.Dataframe): A dataframe from which to select
+                a subset of columns.
+        '''
         X = pd.DataFrame(X)
         column_list = [i for i in range(0, len(X.columns))]
 
@@ -36,6 +49,14 @@ class RandomSelect:
         self.names = [all_columns[item] for item in column_list]
 
     def transform(self, X):
+        '''Returns a subset of a dataframe.
+        Args:
+            X (pd.DataFrame): A dataframe with the same
+                column names as the one with which the selector
+                was fit.
+        Returns:
+            X_trans (pd.DataFrame): The dataframe subset X[self.names].
+        '''
         X = pd.DataFrame(X)
         return X[self.names]
 
@@ -46,11 +67,22 @@ class Dendrogram():
         representing connectivity at a set of discrete thresholds.
     """
 
-    def __init__(self, df=None, pairing_func=None, max_threshes=None):
+    def __init__(self, X=None, pairing_func=None, max_threshes=None):
+        '''Build graphs for a given pairing function.
+        First creates an adjacency matrix given a certain pairing function.
+        It will then go through and build endges and graphs from those
+        edge-vertex pairs. The graphs are all stored in order.
+
+        Args:
+            X (pd.DataFrame): The dataframe for which to build the Dendrogram.
+            pairing_func (func): A function which takes in two columns and
+                returns a number.
+            max_threshes (int): The maximum number of graphs to build.
+        '''
         if pairing_func is None:
             pairing_func = _one_minus_corr
         # Create adjacency matrix and columns list
-        self.adj, self.columns = adj_maker(df, pairing_func)
+        self.adj, self.columns = adj_maker(X, pairing_func)
 
         # Normalize adj
         # self.adj *= np.abs(1.0 / np.abs(self.adj).max())
@@ -102,22 +134,48 @@ class Dendrogram():
             self.edges.append(_edge_maker(self.adj, thresh))
 
     def features_at_step(self, step):
-        '''
-        Find the representatives at a certain step for a given graph.
+        '''Find the representatives at a certain step for a given graph.
+        Args:
+            step (int): Which position in self.threshlist to show features from.
         '''
         featurelist = [self.columns[x] for x in self.graphs[step].iterkeys()]
         return featurelist
 
-    def score_at_point(self, df, labels, step, scoring_func):
+    def score_at_point(self, X, y, step, scoring_func):
+        '''A helper method for scoring a Dendrogram at a step.
+
+        Args:
+            X (pd.DataFrame): A dataframe with the same columns that the
+                Dendrogram was built with.
+            y (pd.Series): Labels for X.
+            step (int): Which position in self.threshlist to show features from.
+            scoring_func (func): A function which takes in X and y.
+        '''
         featurelist = self.features_at_step(step)
         print('Using {} features'.format(len(featurelist)))
-        return scoring_func(df[featurelist], labels)
+        return scoring_func(X[featurelist], y)
 
-    def shuffle_and_score_at_point(self, df, labels, step, scoring_func):
+    def shuffle_and_score_at_point(self, X, y, step, scoring_func):
+        '''A helper method for scoring a Dendrogram at a step.
+        This method shuffles the graph representatives and then
+        runs ``score_at_point``. By running shuffle and score at point
+        multiple times, you can get an impression of how representative
+        a particular feature set is of the underlying graph structure.
+
+        Args:
+            X (pd.DataFrame): A dataframe with the same columns that the
+                Dendrogram was built with.
+            y (pd.Series): Labels for X.
+            step (int): Which position in self.threshlist to show features from.
+            scoring_func (func): A function which takes in X and y.
+        '''
+
         self._shuffle_all_representatives()
-        return self.score_at_point(df, labels, step, scoring_func)
+        return self.score_at_point(X, y, step, scoring_func)
 
     def find_set_of_size(self, size):
+        '''Finds a column set of a certain size in the Dendrogram.
+        '''
         for i, graph in enumerate(self.graphs):
             if len(graph.keys()) <= size:
                 print("There are {} distinct connected components at thresh step {} in the Dendrogram".format(
@@ -127,7 +185,8 @@ class Dendrogram():
                     print("You might also be interested in"
                           " {} components at step {}".format(prevlength, i - 1))
                 return i
-        print("Warning, could not find requested size, returning set of size {}".format(len(self.graphs[-1])))
+        print("Warning, could not find requested size, returning set of size {}".format(
+            len(self.graphs[-1])))
         return (len(self.graphs) - 1)
 
     def _shuffle_all_representatives(self):
@@ -141,31 +200,45 @@ class Dendrogram():
             templist.append(temp)
         self.graphs = templist
 
-    def transform(self, df, n_feats=10):
-        assert df.shape[1] >= n_feats
+    def transform(self, X, n_feats=10):
+        '''Return a dataframe of a particular size.
+
+        Args:
+            X (pd.Dataframe): The dataframe to transform.
+            n_feats (int): The number of columns to return
+        '''
+        assert X.shape[1] >= n_feats
         step = self.find_set_of_size(n_feats)
-        return df[self.features_at_step(step)]
+        return X[self.features_at_step(step)]
 
 
-def adj_maker(df, pairing_func):
-    '''
-    Given a dataframe and a pairing function make
+def adj_maker(data, pairing_func):
+    '''Given a dataframe and a pairing function make
     an adjacency graph and a dictionary of columns.
     The dictionary can be used to associate column position
     to column name.
-    '''
-    adj = np.zeros((df.shape[1], df.shape[1]))
-    for i, col1 in enumerate(df):
-        for j, col2 in enumerate(df):
-            adj[j][i] = pairing_func(df[col1], df[col2])
 
-    columns = {i: col for i, col in enumerate(df)}
+    Args:
+        data (pd.DataFrame): A dataframe from which to make an
+            adjacency graph.
+        pairing_function (func): A function which takes in two columns
+            and returns a number.
+
+    Returns:
+        adj, columns (np.array, dict[int, str]): An adjacency graph
+            and a dictionary pairing column locations with column names.
+    '''
+    adj = np.zeros((data.shape[1], data.shape[1]))
+    for i, col1 in enumerate(data):
+        for j, col2 in enumerate(data):
+            adj[j][i] = pairing_func(data[col1], data[col2])
+
+    columns = {i: col for i, col in enumerate(data)}
     return adj, columns
 
 
 def _edge_maker(adj, thresh):
-    '''
-    Make all edges at a given threshold. Prerequisite
+    '''Make all edges at a given threshold. Prerequisite
     to make the associated graph.
     '''
     it = np.nditer(adj, flags=['multi_index'])
@@ -177,11 +250,15 @@ def _edge_maker(adj, thresh):
 
 
 def find_connected_components(vertices, edges):
-    '''
-    For vertices and edges (which is a list of 2-tuples),
-    do a depth first search to make a dictionary whose
+    '''Make a graph from a list of vertices and edges.
+    Do a depth first search to make a dictionary whose
     keys are representatives and values is a list of
-    vertices in a given component.
+    vertices in a given component. It is assumed all edges
+    are symmetric.
+
+    Args:
+        vertices (list[int]): A list of vertex locations.
+        edges (list[tuple[int, int]]): A list of pairs of vertices.
     '''
     d = defaultdict(set)
     for edge in edges:

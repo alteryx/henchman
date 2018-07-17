@@ -8,8 +8,8 @@ The ``Henchman`` package has reusable functionality in four areas:
 We'll demonstrate some of that functionality here in the documentaion.
 
 To get started, we'll use a premade feature matrix
-from the Featuretools package ``ft.demo.load_flight``.
-We'll load in the package using pandas.
+from the Featuretools ``ft.demo.load_flight()`` function.
+We'll load in the csv using pandas.
 
 .. ipython:: python
 
@@ -201,7 +201,10 @@ from which you can copy and paste the ones you want.
     from henchman.plotting import show
     hplot.show_template()
 
-**Module Contents**
+See the `plotting examples <plotting_examples.html>`_ page
+for some example bokeh plots.
+
+ **Module Contents**
 
 .. currentmodule:: henchman.plotting
 
