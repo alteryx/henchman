@@ -295,7 +295,7 @@ def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
     return tmp
 
 
-def static_piechart(col, sort=True, mergepast=10, drop_n=None):
+def static_piechart(col, sort=True, mergepast=10, drop_n=None, hover=True):
     '''Creates a static piechart.
     Finds all of the unique values in a column and makes a piechart
     out of them. By default, the chart will be sorted and merge together
@@ -316,8 +316,15 @@ def static_piechart(col, sort=True, mergepast=10, drop_n=None):
     '''
 
     source = ColumnDataSource(_make_pie_source(col, mergepast, sort, drop_n))
-
-    plot = figure(height=500, toolbar_location=None)
+    tools = ['box_zoom', 'save', 'reset']
+    if hover:
+        hover = HoverTool(
+            tooltips=[
+                ("Name", " @names"),
+            ],
+            mode='mouse')
+        tools = tools + [hover]
+    plot = figure(height=500, tools=tools, toolbar_location='above')
     plot.wedge(x=0, y=0,
                radius=0.3,
                start_angle='starts',
@@ -333,7 +340,7 @@ def static_piechart(col, sort=True, mergepast=10, drop_n=None):
 
 
 def _make_scatter_source(col1, col2):
-    tmp = pd.DataFrame(col1, col2).reset_index()
+    tmp = pd.DataFrame({col1.name: col1, col2.name: col2})
     tmp['pairs'] = tmp.apply(lambda row: (row[0], row[1]), axis=1)
     source = pd.DataFrame(tmp.groupby('pairs').first())
     source['count'] = tmp.groupby('pairs').count().iloc[:, 1]
@@ -362,7 +369,7 @@ def static_scatterplot(col1, col2, hover=True):
         >>> hplot.show(plot)
     '''
     source = ColumnDataSource(_make_scatter_source(col1, col2))
-    tools = ['box_zoom', 'reset']
+    tools = ['box_zoom', 'save', 'reset']
     if hover:
         hover = HoverTool(tooltips=[
             (col1.name, '@x'),
@@ -418,7 +425,7 @@ def static_scatterplot_and_label(col1, col2, label, hover=False):
         >>> hplot.show(plot)
     '''
     source = ColumnDataSource(_make_scatter_label_source(col1, col2, label))
-    tools = ['box_zoom', 'reset']
+    tools = ['box_zoom', 'save', 'reset']
     if hover:
         hover = HoverTool(tooltips=[
             (col1.name, '@x'),
@@ -438,6 +445,19 @@ def static_scatterplot_and_label(col1, col2, label, hover=False):
 
 
 def dynamic_histogram(col):
+    '''Creates a dynamic histogram.
+    Allows for interactive modification of the static_histogram plot.
+
+    Args:
+        col (pd.Series): The column from which to make the histogram.
+
+    Example:
+        If the dataframe ``X`` has a column named ``amount``.
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.dynamic_histogram(X['amount'])
+        >>> hplot.show(plot1)
+    '''
     def modify_doc(doc, col):
         hover = HoverTool(
             tooltips=[
@@ -486,6 +506,30 @@ def dynamic_histogram(col):
 
 
 def dynamic_histogram_and_label(col, label, normalized=True):
+    '''Creates a dynamic histogram with binary label.
+    This function builds the static_histogram_and_label, but allows
+    for modification of the parameters.
+
+    Args:
+        col (pd.Series): The column from which to make a histogram.
+        label (pd.Series): The binary label you'd like to track
+        normalized (bool): Whether or not to normalize both histograms.
+                Default values is ``True``.
+
+    Examples:
+        If the dataframe ``X`` has a column named ``amount`` and
+        a label ``y``, you can compare them with
+
+        >>> import henchman.plotting as hplot
+        >>> plot1 = hplot.dynamic_histogram_and_label(X['amount'], y)
+        >>> hplot.show(plot1)
+
+        If you want the raw number of positive labels in each bin, set normalized
+
+        >>> plot2 = hplot.dynamic_histogram_and_label(X['amount'], y, normalized=False)
+        >>> hplot.show(plot2)
+
+    '''
     def modify_doc(doc, col, label, normalized):
 
         truncated = col[(col <= col.max()) & (col >= col.min())]
@@ -556,13 +600,34 @@ def dynamic_histogram_and_label(col, label, normalized=True):
     return lambda doc: modify_doc(doc, col, label, normalized)
 
 
-def dynamic_piechart(col):
+def dynamic_piechart(col, hover=True):
+    '''Creates a dynamic piechart.
+    This allows the user to interactively change the arguments
+    to a static piechart.
 
-    def modify_doc(doc, col):
+    Args:
+        col (pd.Series): The column from which to make the piechart.
+
+    Example:
+        If the dataframe ``X`` has a column named ``car_color``:
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.dynamic_piechart(X['car_color'])
+        >>> hplot.show(plot)
+    '''
+    def modify_doc(doc, col, hover):
         n_values = col.nunique()
         source = ColumnDataSource(_make_pie_source(col,
                                                    mergepast=n_values))
-        plot = figure(height=500, toolbar_location=None)
+        tools = ['box_zoom', 'save', 'reset']
+        if hover:
+            hover = HoverTool(
+                tooltips=[
+                    ("Name", " @names"),
+                ],
+                mode='mouse')
+            tools = tools + [hover]
+        plot = figure(height=500, tools=tools, toolbar_location='above')
         plot.wedge(x=0, y=0,
                    radius=0.3,
                    start_angle='starts',
@@ -603,40 +668,80 @@ def dynamic_piechart(col):
                 plot
             ))
 
-    return lambda doc: modify_doc(doc, col)
+    return lambda doc: modify_doc(doc, col, hover)
 
 
-# def plot_roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=3):
-#     scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1):
+    '''Plots the receiver operating characteristic curve.
+    This function creates a fit model and shows the results roc curve.
 
-#     probs = model.predict_proba(df_list[1])
-#     fpr, tpr, thresholds = roc_curve(df_list[3],
-#                                      probs[:, prob_col],
-#                                      pos_label=pos_label)
+    Args:
+        X (pd.DataFrame): The dataframe on which to create a model.
+        y (pd.Series): The labels for which to create a model.
+        pos_label (int): Which label to check for fpr and tpr. Default is 1.
+        prob_col (int): The location in the probs dataframe of the pos label values. Default is 1.
+        n_splits (int): Number of splits for validation in create model.
 
-#     p = figure()
-#     p.line(x=fpr, y=tpr)
-#     p.title.text = 'Receiver operating characteristic'
-#     p.xaxis.axis_label = 'False Positive Rate'
-#     p.yaxis.axis_label = 'True Positive Rate'
+   Example:
+        Given a feature matrix X and binary classification labels y:
 
-#     p.line(x=fpr, y=fpr, color='red', line_dash='dashed')
-#     return(p)
+        >>> import henchman.plotting as hplot
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> plot = hplot.roc_auc(X, y, RandomForestClassifier())
+        >>> hplot.show(plot)
+    '''
+
+    scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+
+    probs = model.predict_proba(df_list[1])
+    fpr, tpr, thresholds = roc_curve(df_list[3],
+                                     probs[:, prob_col],
+                                     pos_label=pos_label)
+    tools = ['box_zoom', 'save', 'reset']
+    plot = figure(tools=tools)
+    plot.line(x=fpr, y=tpr)
+    plot.title.text = 'Receiver operating characteristic'
+    plot.xaxis.axis_label = 'False Positive Rate'
+    plot.yaxis.axis_label = 'True Positive Rate'
+
+    plot.line(x=fpr, y=fpr, color='red', line_dash='dashed')
+    return(plot)
 
 
-# def plot_f1(X, y, model, nprecs, n_splits=3):
-#     scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
-#     probs = model.predict_proba(df_list[1])
-#     threshes = [x/1000. for x in range(50, nprecs)]
-#     precisions = [precision_score(df_list[3], probs[:, 1] > t) for t in threshes]
-#     recalls = [recall_score(df_list[3], probs[:, 1] > t) for t in threshes]
-#     fones = [f1_score(df_list[3], probs[:, 1] > t) for t in threshes]
+def f1(X, y, model, n_precs=1000, n_splits=1):
+    '''Plots precision, recall and f1.
+    This function creates a fit model and shows the precision,
+    recall and f1 results at multiple thresholds.
 
-#     output_notebook()
-#     p = figure()
-#     p.line(x=threshes, y=precisions, color='green', legend='precision')
-#     p.line(x=threshes, y=recalls, color='blue', legend='recall')
-#     p.line(x=threshes, y=fones, color='red', legend='f1')
-#     p.xaxis.axis_label = 'Threshold'
-#     p.title.text = 'Precision, Recall, and F1 by Threshold'
-#     return(p)
+    Args:
+        X (pd.DataFrame): The dataframe on which to create a model.
+        y (pd.Series): The labels for which to create a model.
+        model: An unfit model for create model.
+        n_precs (int): The number of thresholds to sample between 0 and 1.
+        n_splits (int): Number of splits for validation in create model.
+
+   Example:
+        Given a feature matrix X and binary classification labels y:
+
+        >>> import henchman.plotting as hplot
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> plot = hplot.f1(X, y, RandomForestClassifier(), n_precs=500)
+        >>> hplot.show(plot)
+    '''
+    scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+    probs = model.predict_proba(df_list[1])
+    threshes = [x/float(n_precs) for x in range(0, n_precs)]
+    precisions = [precision_score(df_list[3], probs[:, 1] > t) for t in threshes]
+    recalls = [recall_score(df_list[3], probs[:, 1] > t) for t in threshes]
+    fones = [f1_score(df_list[3], probs[:, 1] > t) for t in threshes]
+
+    tools = ['box_zoom', 'save', 'reset']
+
+    plot = figure(tools=tools)
+    plot.line(x=threshes, y=precisions, color='green', legend='precision')
+    plot.line(x=threshes, y=recalls, color='blue', legend='recall')
+    plot.line(x=threshes, y=fones, color='red', legend='f1')
+
+    plot.xaxis.axis_label = 'Threshold'
+    plot.title.text = 'Precision, Recall, and F1 by Threshold'
+    return(plot)

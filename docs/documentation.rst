@@ -213,7 +213,6 @@ for some example bokeh plots.
     :toctree: generated/
 
     show
-    feature_importances
     static_histogram
     static_histogram_and_label
     static_piechart
@@ -222,3 +221,6 @@ for some example bokeh plots.
     dynamic_histogram
     dynamic_histogram_and_label
     dynamic_piechart
+    feature_importances
+    roc_auc
+    f1
