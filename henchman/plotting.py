@@ -10,22 +10,30 @@ import numpy as np
 
 from bokeh.models import (ColumnDataSource, HoverTool,
                           Slider, RangeSlider, CheckboxGroup,
-                          Range1d)
+                          Range1d, CDSView, Plot, MultiLine,
+                          Circle, TapTool, BoxZoomTool, ResetTool, SaveTool)
+
+from bokeh.models.widgets import DataTable, TableColumn
+from bokeh.models.graphs import from_networkx, NodesAndLinkedEdges
+
 from bokeh.layouts import column, row
 from bokeh.plotting import figure
+
 from bokeh.io import output_notebook
 from bokeh.io.export import get_screenshot_as_png
 import bokeh.io as io
 
 from math import pi
 
-from bokeh.palettes import Category20
+from bokeh.palettes import Category20, Spectral4
 
 from henchman.learning import _raw_feature_importances
 from henchman.learning import create_model
 
 from sklearn.metrics import (roc_auc_score, precision_score,
                              recall_score, f1_score, roc_curve)
+
+import networkx as nx
 
 
 def show_template():
@@ -81,7 +89,7 @@ def show(plot, png=False,
 
         >>> hplot.show(plot, width=500, title='My Plot Title')
     '''
-    output_notebook()
+    output_notebook(hide_banner=True)
     if width is not None:
         plot.width = width
     if height is not None:
@@ -672,18 +680,18 @@ def dynamic_piechart(col, hover=True):
 
 
 def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1):
-    '''Plots the receiver operating characteristic curve.
-    This function creates a fit model and shows the results roc curve.
+    '''Plots the reveiver operating characteristic curve.
+    This function creates a fit model and shows the results of the roc curve.
 
     Args:
         X (pd.DataFrame): The dataframe on which to create a model.
         y (pd.Series): The labels for which to create a model.
         pos_label (int): Which label to check for fpr and tpr. Default is 1.
-        prob_col (int): The location in the probs dataframe of the pos label values. Default is 1.
-        n_splits (int): Number of splits for validation in create model.
+        prob_col (int): The columns of the probs dataframe to use.
+        n_splits (int): The number of splits to use in validation.
 
-   Example:
-        Given a feature matrix X and binary classification labels y:
+    Example:
+        If the dataframe ``X`` has a binary classification label y:
 
         >>> import henchman.plotting as hplot
         >>> from sklearn.ensemble import RandomForestClassifier
@@ -709,25 +717,25 @@ def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1):
 
 
 def f1(X, y, model, n_precs=1000, n_splits=1):
-    '''Plots precision, recall and f1.
+    '''Plots the precision, recall and f1 at various thresholds.
     This function creates a fit model and shows the precision,
     recall and f1 results at multiple thresholds.
 
     Args:
         X (pd.DataFrame): The dataframe on which to create a model.
         y (pd.Series): The labels for which to create a model.
-        model: An unfit model for create model.
         n_precs (int): The number of thresholds to sample between 0 and 1.
-        n_splits (int): Number of splits for validation in create model.
+        n_splits (int): The number of splits to use in validation.
 
-   Example:
-        Given a feature matrix X and binary classification labels y:
+    Example:
+        If the dataframe ``X`` has a binary classification label ``y``:
 
         >>> import henchman.plotting as hplot
         >>> from sklearn.ensemble import RandomForestClassifier
-        >>> plot = hplot.f1(X, y, RandomForestClassifier(), n_precs=500)
+        >>> plot = hplot.f1(X, y, RandomForestClassifier())
         >>> hplot.show(plot)
     '''
+
     scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
     probs = model.predict_proba(df_list[1])
     threshes = [x/float(n_precs) for x in range(0, n_precs)]
@@ -745,3 +753,110 @@ def f1(X, y, model, n_precs=1000, n_splits=1):
     plot.xaxis.axis_label = 'Threshold'
     plot.title.text = 'Precision, Recall, and F1 by Threshold'
     return(plot)
+
+
+def dendrogram(D):
+    '''Creates a dynamic dendrogram plot.
+    This plot can show full structure of a given dendrogram.
+
+    Args:
+        D (henchman.selection.Dendrogram): An initialized dendrogram object
+
+    Examples:
+        >>> from henchman.selection import Dendrogram
+        >>> from henchman.plotting import show
+        >>> import henchman.plotting as hplot
+        >>> D = Dendrogram(X)
+        >>> plot = hplot.dynamic_dendrogram(D)
+        >>> show(plot)
+    '''
+    def modify_doc(doc, D):
+        G = nx.Graph()
+
+        vertices_source = ColumnDataSource(
+            pd.DataFrame({'index': D.columns.keys(),
+                          'desc': D.columns.values()}))
+        edges_source = ColumnDataSource(
+            pd.DataFrame(D.edges[0]).rename(
+                columns={1: 'end', 0: 'start'}))
+        step_source = ColumnDataSource(
+            pd.DataFrame({'step': [0],
+                          'thresh': [D.threshlist[0]],
+                          'components': [len(D.graphs[0])]}))
+
+        G.add_nodes_from(vertices_source.data['index'])
+        G.add_edges_from(zip(
+            edges_source.data['start'],
+            edges_source.data['end']))
+
+        graph_renderer = from_networkx(G, nx.circular_layout,
+                                       scale=1, center=(0, 0))
+
+        graph_renderer.node_renderer.data_source = vertices_source
+        graph_renderer.node_renderer.view = CDSView(source=vertices_source)
+        graph_renderer.edge_renderer.data_source = edges_source
+        graph_renderer.edge_renderer.view = CDSView(source=edges_source)
+
+        plot = Plot(plot_width=400, plot_height=400,
+                    x_range=Range1d(-1.1, 1.1),
+                    y_range=Range1d(-1.1, 1.1))
+        plot.title.text = "Feature Connectivity"
+
+        graph_renderer.node_renderer.glyph = Circle(
+            size=5, fill_color=Spectral4[0])
+        graph_renderer.node_renderer.selection_glyph = Circle(
+            size=15, fill_color=Spectral4[2])
+
+        graph_renderer.edge_renderer.data_source = edges_source
+        graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC",
+                                                       line_alpha=0.6,
+                                                       line_width=.5)
+        graph_renderer.edge_renderer.selection_glyph = MultiLine(
+            line_color=Spectral4[2],
+            line_width=3)
+
+        graph_renderer.node_renderer.hover_glyph = Circle(
+            size=5,
+            fill_color=Spectral4[1])
+
+        graph_renderer.selection_policy = NodesAndLinkedEdges()
+        graph_renderer.inspection_policy = NodesAndLinkedEdges()
+
+        plot.renderers.append(graph_renderer)
+
+        plot.add_tools(
+            HoverTool(tooltips=[("feature", "@desc"),
+                                ("index", "@index"), ]),
+            TapTool(),
+            BoxZoomTool(),
+            SaveTool(),
+            ResetTool())
+
+        data_table = DataTable(source=step_source,
+                               columns=[TableColumn(field='step',
+                                                    title='Step'),
+                                        TableColumn(field='thresh',
+                                                    title='Thresh'),
+                                        TableColumn(field='components',
+                                                    title='Components')],
+                               height=50, width=400)
+
+        def callback(attr, old, new):
+            edges = D.edges[slider.value]
+            edges_source.data = ColumnDataSource(
+                pd.DataFrame(edges).rename(columns={1: 'end',
+                                                    0: 'start'})).data
+            step_source.data = ColumnDataSource(
+                {'step': [slider.value],
+                 'thresh': [D.threshlist[slider.value]],
+                 'components': [len(D.graphs[slider.value])]}).data
+
+        slider = Slider(start=0,
+                        end=len(D.edges),
+                        value=0,
+                        step=1,
+                        title="Step")
+        slider.on_change('value', callback)
+
+        doc.add_root(column(slider, data_table, plot))
+    return lambda doc: modify_doc(doc, D)

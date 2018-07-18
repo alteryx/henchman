@@ -221,6 +221,7 @@ for some example bokeh plots.
     dynamic_histogram
     dynamic_histogram_and_label
     dynamic_piechart
+    dendrogram
     feature_importances
     roc_auc
     f1
