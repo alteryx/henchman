@@ -178,8 +178,9 @@ class Dendrogram():
         '''
         for i, graph in enumerate(self.graphs):
             if len(graph.keys()) <= size:
-                print("There are {} distinct connected components at thresh step {} in the Dendrogram".format(
-                    len(graph.keys()), i))
+                print("There are {} distinct connected components"
+                      "at thresh step {} in the Dendrogram".format(
+                          len(graph.keys()), i))
                 if i > 0:
                     prevlength = len(self.graphs[i - 1].keys())
                     print("You might also be interested in"

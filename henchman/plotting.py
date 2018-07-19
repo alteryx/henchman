@@ -699,7 +699,8 @@ def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1):
         >>> hplot.show(plot)
     '''
 
-    scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+    scores, model, df_list = create_model(
+        X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
 
     probs = model.predict_proba(df_list[1])
     fpr, tpr, thresholds = roc_curve(df_list[3],
@@ -736,7 +737,8 @@ def f1(X, y, model, n_precs=1000, n_splits=1):
         >>> hplot.show(plot)
     '''
 
-    scores, model, df_list = create_model(X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
+    scores, model, df_list = create_model(
+        X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
     probs = model.predict_proba(df_list[1])
     threshes = [x/float(n_precs) for x in range(0, n_precs)]
     precisions = [precision_score(df_list[3], probs[:, 1] > t) for t in threshes]

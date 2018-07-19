@@ -38,13 +38,6 @@ def _fit_predict(X_train, X_test, y_train, y_test, model, metric):
     return metric(y_test, preds), model
 
 
-def _get_dataframes(model, metric):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=split_size)
-    model = model
-    model.fit(X_train, y_train)
-    return y_test, model.predict_proba(X_test)
-
-
 def _score_tt(X, y, model, metric, split_size):
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=split_size)
     score, fit_model = _fit_predict(X_train, X_test,
@@ -56,8 +49,8 @@ def create_model(X, y, model=None, metric=None,
                  n_splits=1, split_size=.3, _return_df=False):
     '''Make a model. Returns a scorelist and a fit model.
     A wrapper around a standard scoring workflow. Uses
-    train_test_split unless otherwise specified(in which case
-    it will use TimeSeriesSplit).
+    ``train_test_split`` unless otherwise specified (in which case
+    it will use ``TimeSeriesSplit``).
 
     In this function we trade flexibility for ease of use. Unless
     you want this exact validation-fitting-scoring method, it's
@@ -75,7 +68,7 @@ def create_model(X, y, model=None, metric=None,
                 Not generally useful, but sometimes necessary.
 
     Returns:
-        scores, fit_model(list[float], sklearn.ensemble): A list of scores and a fit model.
+        (list[float], sklearn.ensemble): A list of scores and a fit model.
 
     Example:
         >>> from henchman.learning import create_model
@@ -118,10 +111,10 @@ def inplace_encoder(X):
     implying an artificial ordering in categorical features.
 
     Args:
-        X(pd.DataFrame): The dataframe to encode.
+        X (pd.DataFrame): The dataframe to encode.
 
     Returns:
-        X(pd.DataFrame): A dataframe whose categorical columns have been replaced by integers.
+       pd.DataFrame: A dataframe whose categorical columns have been replaced by integers.
 
     Example:
         >>> from henchman.learning import inplace_encoder
@@ -152,7 +145,7 @@ def feature_importances(X, model, n_feats=5):
         n_feats(int): Number of feature importances to return.
 
     Returns:
-        feature_list(list[str]): A list of n_feats feature column names.
+        list[str]: A list of n_feats feature column names.
 
     Example:
         >>> from henchman.learning import feature_importances
