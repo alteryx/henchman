@@ -1,11 +1,58 @@
-Overview
-=============
-A collection of utility functions for making demo notebooks.
+Welcome to Henchman!
+=====================
+Henchman is a collection of free and `open source
+<LICENSE>`_ python
+utility functions for working in a jupyter notebook. With
+Henchman, you can rapidly prototype end-to-end data science
+workflows. You can explore data with
+``henchman.diagnostics``, make interesting plots with
+``henchman.plotting``, and do feature selection and machine
+learning with ``henchman.selection`` and 
+``henchman.learning``.
 
-* Free software: BSD-3
+Why?
+~~~~~~~
+Life is full of reusable functions. Here's what separates
+Henchman:
 
-The Henchman package is a collection of frequently used utility functions for Featuretools demos. There are a number of functions which appear in multiple `utils.py` files in multiple demos. This project consolidates those into 4 categories of reusable functions: `dataframe diagnostics <documentation.html#diagnostics>`_, `feature selection
-<documentation.html#selection>`_, `machine learning <documentation.html#learning>`_ and `bokeh plotting <documentation.html#plotting>`_.
+- **Easy Interactive Plotting**: We bypass the flexible Bokeh
+  API in favor of a small, rigid collection of standard data
+  analysis plots. With sliders and checkboxes, finding the
+  right plot parameters is as easy as a single function call.
+
+.. image:: img/dynamic_piechart.gif
+   :width: 47%
+   :height: 200px
+.. image:: img/dynamic_histogram.gif
+   :width: 47%
+   :scale: 80%
+
+- **Memorable API, Extensive documentation**: We have a heavy
+  emphasis on ease of use. That means all the functions are
+  sorted into one of 4 semantically named modules and names
+  should be easy to remember inside that module. On top of
+  that, every function has a docstring, an example and a documentation page.
+
+.. image:: img/create_model_docs.png
+   :width: 75%
+   :align: center
+
+- **Novel Functionality**: We provide a few functions built
+  from scratch to add to your data science workflow. There
+  are methods to systematically find dataset attributes with
+  ``overview`` and ``warnings`` from `henchman.diagnostics` and classes to
+  select features in novel ways with ``RandomSelect`` and
+  ``Dendrogram`` in `henchman.selection`.
+
+.. image:: img/overview.png
+   :width: 47%
+.. image:: img/warnings.png
+   :width: 47%
+
+.. image:: img/dendrogram.gif
+   :align: center
+
+
 
 Install
 ~~~~~~~~~
