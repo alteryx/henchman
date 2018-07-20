@@ -7,7 +7,7 @@ Welcome to the Henchman documentation!
 
    readme
    documentation
-   plotting_examples
+   plotting_gallery
    contributing
    authors
 

@@ -20,12 +20,12 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters is as easy as a single function call.
 
-.. image:: img/dynamic_piechart.gif
+.. image:: docs/_source/img/dynamic_piechart.gif
    :width: 47%
-   :height: 200px
-.. image:: img/dynamic_histogram.gif
+   :height: 300px
+.. image:: docs/_source/img/dynamic_histogram.gif
    :width: 47%
-   :scale: 80%
+   :height: 300px
 
 - **Memorable API, Extensive documentation**: We have a heavy
   emphasis on ease of use. That means all the functions are
@@ -33,7 +33,7 @@ Henchman:
   should be easy to remember inside that module. On top of
   that, every function has a docstring, an example and a documentation page.
 
-.. image:: img/create_model_docs.png
+.. image:: docs/_source/img/create_model_docs.png
    :width: 75%
    :align: center
 
@@ -44,12 +44,14 @@ Henchman:
   select features in novel ways with ``RandomSelect`` and
   ``Dendrogram`` in `henchman.selection`.
 
-.. image:: img/overview.png
+.. image:: docs/_source/img/overview.png
    :width: 47%
-.. image:: img/warnings.png
+   :height: 300px
+.. image:: docs/_source/img/warnings.png
    :width: 47%
+   :height: 300px
 
-.. image:: img/dendrogram.gif
+.. image:: docs/_source/img/dendrogram.gif
    :align: center
 
 

@@ -13,7 +13,7 @@ from bokeh.models import (ColumnDataSource, HoverTool,
                           Range1d, CDSView, Plot, MultiLine,
                           Circle, TapTool, BoxZoomTool, ResetTool, SaveTool)
 
-from bokeh.models.widgets import DataTable, TableColumn
+from bokeh.models.widgets import DataTable, TableColumn, Dropdown
 from bokeh.models.graphs import from_networkx, NodesAndLinkedEdges
 
 from bokeh.layouts import column, row
@@ -464,7 +464,7 @@ def dynamic_histogram(col):
 
         >>> import henchman.plotting as hplot
         >>> plot = hplot.dynamic_histogram(X['amount'])
-        >>> hplot.show(plot1)
+        >>> hplot.show(plot)
     '''
     def modify_doc(doc, col):
         hover = HoverTool(
@@ -862,3 +862,80 @@ def dendrogram(D):
 
         doc.add_root(column(slider, data_table, plot))
     return lambda doc: modify_doc(doc, D)
+
+
+def dynamic_aggregation(col_1, col_2):
+    '''Creates a dynamic aggregation of one numeric variable by another.
+    This function allows for the user to mean, count, sum or find the min
+    or max of a second variable with regards to the first. It is a generalization
+    of the dynamic histogram function.
+
+    Args:
+        col_1 (pd.Series): The column from which to create bins.
+        col_2 (pd.Series): The column to aggregate
+
+    Example:
+        If the dataframe ``X`` has a columns named ``amount`` and ``date``.
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.dynamic_aggregation(pd.to_numeric(X['date']), X['amount'])
+        >>> hplot.show(plot)
+    '''
+    def modify_doc(doc, col_1, col_2):
+        hover = HoverTool(
+            tooltips=[
+                ("Height", " @height"),
+                ("Bin", " [@left{0.00}, @right{0.00})")
+            ],
+            mode='mouse')
+
+        truncated = col_1[(col_1 <= col_1.max()) & (col_1 >= col_1.min())]
+        tmp = pd.DataFrame({col_1.name: truncated,
+                            'height': col_2,
+                            'splits': pd.cut(col_1, 10, right=False)})
+
+        tmp = tmp.groupby('splits')['height'].mean().reset_index()
+        tmp['left'] = list(tmp['splits'].apply(lambda x: x.left))
+        tmp['right'] = list(tmp['splits'].apply(lambda x: x.right))
+
+        source = ColumnDataSource(pd.DataFrame(tmp[['height', 'left', 'right']]))
+
+        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
+        plot.quad(top='height', bottom=0,
+                  left='left', right='right',
+                  line_color='white', source=source, fill_alpha=.5)
+
+        def callback(attr, old, new):
+            truncated = col_1[(col_1 <= range_select.value[1]) & (col_1 >= range_select.value[0])]
+
+            tmp = pd.DataFrame({col_1.name: truncated,
+                                'height': col_2,
+                                'splits': pd.cut(truncated, slider.value, right=False)})
+            tmp = tmp.groupby('splits')['height'].aggregate(dropdown.value).reset_index()
+
+            tmp['left'] = list(tmp['splits'].apply(lambda x: x.left))
+            tmp['right'] = list(tmp['splits'].apply(lambda x: x.right))
+            source_df = tmp[['height', 'left', 'right']]
+            source.data = ColumnDataSource(source_df).data
+            dropdown.label = dropdown.value
+
+        slider = Slider(start=1, end=100,
+                        value=10, step=1,
+                        title="Bins")
+        slider.on_change('value', callback)
+
+        range_select = RangeSlider(start=col_1.min(),
+                                   end=col_1.max(),
+                                   value=(col_1.min(), col_1.max()),
+                                   step=1, title='Range')
+        range_select.on_change('value', callback)
+        dropdown = Dropdown(value='mean', label="mean",
+                            button_type="default",
+                            menu=[('Mean', 'mean'),
+                                  ('Count', 'count'),
+                                  ('Sum', 'sum'),
+                                  ('Max', 'max'),
+                                  ('Min', 'min')])
+        dropdown.on_change('value', callback)
+        doc.add_root(column(slider, range_select, dropdown, plot))
+    return lambda doc: modify_doc(doc, col_1, col_2)

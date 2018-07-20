@@ -20,6 +20,8 @@ We'll load in the csv using pandas.
 
 .. currentmodule:: henchman
 
+.. _diagnostics:
+
 Diagnostics
 ~~~~~~~~~~~
 It can sometimes be hard to find information about a dataframe by inspection.
@@ -82,6 +84,7 @@ about every column in the dataframe.
 
 
 
+.. _selection:
 
 Selection
 ~~~~~~~~~
@@ -141,6 +144,8 @@ can be shuffled to return a similarly connected feature set.
     RandomSelect
     Dendrogram
 
+.. _learning:
+
 Learning
 ~~~~~~~~
 The learning module exists to simplify some frequent machine
@@ -179,6 +184,7 @@ We can check :func:`feature importances
     feature_importances
     create_holdout
 
+.. _plotting:
 
 Plotting
 ~~~~~~~~
@@ -221,6 +227,7 @@ for some example bokeh plots.
     dynamic_histogram
     dynamic_histogram_and_label
     dynamic_piechart
+    dynamic_aggregation
     dendrogram
     feature_importances
     roc_auc
