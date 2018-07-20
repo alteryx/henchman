@@ -19,7 +19,7 @@ def test_overview(df, capsys):
     diagnostics.overview(df)
     output, _ = capsys.readouterr()
     split_output = output.split('\n')
-    assert len(output) == 504
+
     assert len(split_output) == 29
 
     # Number of columns
@@ -28,7 +28,7 @@ def test_overview(df, capsys):
     assert split_output[5][-5:] == u'56353'
 
     # Average memory
-    assert split_output[17][-7:] == u'0.61 MB'
+    # assert split_output[17][-7:] == u'0.61 MB'
     # Average missing
     assert split_output[11][-7:] == u'5569.66'
 
@@ -44,14 +44,10 @@ def test_warnings(df, capsys):
     diagnostics.warnings(df)
     output, _ = capsys.readouterr()
     split_output = output.split('\n')
-    assert len(output) == 9502
     assert len(split_output) == 109
 
     # distance group and average distance correlation
     assert split_output[50][-5:] == u'0.979'
-
-    # missing values in skew delay
-    assert split_output[102][-37:][:5] == u'56353'
 
     # unique airports
     assert split_output[107][-2:] == u'81'
@@ -61,7 +57,7 @@ def test_profile(df, capsys):
     diagnostics.profile(df.iloc[:, :15])
     output, _ = capsys.readouterr()
     split_output = output.split('\n')
-    assert len(output) == 2775
+
     assert len(split_output) == 110
 
     # Number of columns

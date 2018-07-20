@@ -24,7 +24,7 @@ def create_holdout(X, y, split_size=.3):
 
     Example:
         >>> from henchman.learning import create_holdout
-        >>> X, y, X_ho, y_ho = create_holdout(X, y)
+        >>> X, X_ho, y, y_ho = create_holdout(X, y)
     '''
     return train_test_split(X, y, shuffle=False, test_size=split_size)
 

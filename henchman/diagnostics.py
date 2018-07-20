@@ -153,7 +153,7 @@ def _boolean_column_summary(data, bools):
         perctrue = 100 * numtrue / total
 
         print('Number True: {}, Number False: {}, Mean: {:.2f}'.format(
-            numtrue, total, datacol.mean()))
+            numtrue, total - numtrue, datacol.mean()))
         print('Percent True: {:.1f}% | Percent False: {:.1f}%'.format(
             perctrue, 100 - perctrue))
         missing = datacol.isnull().sum()
