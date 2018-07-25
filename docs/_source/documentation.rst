@@ -111,6 +111,7 @@ Alternately, you can use pairwise correlation
     :okwarning:
 
     from henchman.selection import Dendrogram
+    cts = X.pop('time')
     sel2 = Dendrogram(X)
     sel2.transform(X, n_feats=12).head()
 
@@ -219,15 +220,11 @@ for some example bokeh plots.
     :toctree: generated/
 
     show
-    static_histogram
-    static_histogram_and_label
-    static_piechart
-    static_scatterplot
-    static_scatterplot_and_label
-    dynamic_histogram
-    dynamic_histogram_and_label
-    dynamic_piechart
-    dynamic_aggregation
+    show_template
+    histogram
+    piechart
+    scatterplot
+    timeseries
     dendrogram
     feature_importances
     roc_auc

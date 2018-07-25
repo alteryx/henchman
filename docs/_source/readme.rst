@@ -41,7 +41,7 @@ Henchman:
   are methods to systematically find dataset attributes with
   :func:`henchman.diagnostics.overview` and :func:`henchman.diagnostics.warnings` from ``henchman.diagnostics`` and classes to
   select features in novel ways with :class:`RandomSelect <henchman.selection.RandomSelect>` and
-  :class:`Dendrogram <henchman.selection.Dendrogram` in ``henchman.selection``.
+  :class:`Dendrogram <henchman.selection.Dendrogram>` in ``henchman.selection``.
 
 .. image:: img/overview.png
    :width: 47%
@@ -61,7 +61,7 @@ To install Henchman, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install henchman
+    $ pip install ft-henchman
 
 This is the preferred method to install Henchman, as it will always install the most recent stable release.
 
