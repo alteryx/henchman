@@ -203,169 +203,67 @@ def scatterplot(col1, col2, y=None, hover=True, dynamic=False):
             col1, col2, hover, figargs=figargs)
 
 
-def timeseries(col1, col2, col_max=None, col_min=None, n_bins=10,
-               aggregate='mean', hover=True, dynamic=True):
-    '''Creates a time based aggregations of a numeric variable another.
+def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
+               aggregate='mean', hover=True, static=False, figargs=None):
+    '''Creates a time based aggregations of a numeric variable.
     This function allows for the user to mean, count, sum or find the min
-    or max of a second variable with regards to the first. It is a generalization
-    of the dynamic histogram function.
+    or max of a second variable with regards to a timeseries.
 
     Args:
         col_1 (pd.Series): The column from which to create bins. Must be a datetime.
-        col_2 (pd.Series): The column to aggregate
-        dynamic (bool): Whether or not to make a dyanmic plot. Default is True.
+        col_2 (pd.Series): The column to aggregate.
+        col_max (pd.datetime): The maximum value for the x-axis. Default is None.
+        col_min (pd.datetime): The minimum value for the x-axis. Default is None.
+        n_bins (int): The number of time bins to make.
+        aggregate (str): What aggregation to do on the numeric column. Options are
+            'mean', 'sum', 'count', 'max' and 'min'. Default is 'mean'.
+        hover (bool): Whether or not to show the hovertool.
+        static (bool): Whether or not to make a dyanmic plot. Default is False.
 
     Example:
         If the dataframe ``X`` has a columns named ``amount`` and ``date``.
 
         >>> import henchman.plotting as hplot
-        >>> plot = hplot.timeseries_aggregation(X['date'], X['amount'])
+        >>> plot = hplot.timeseries(X['date'], X['amount'])
         >>> hplot.show(plot)
+
+        For a static plot:
+
+        >>> plot2 = hplot.timeseries(X['date'], X['amount'], n_bins=50, static=True)
+        >>> hplot.show(plot2)
     '''
-    if dynamic:
-        return lambda figargs: dynamic_timeseries(col1, col2, figargs=figargs)
-    else:
-        return lambda figargs: static_timeseries(col1, col2, col_max, col_min,
-                                                 n_bins, aggregate, hover, figargs=figargs)
-
-
-# Timeseries Functions
-def static_timeseries(col_1, col_2, col_max=None, col_min=None,
-                      n_bins=10, aggregate='mean', hover=True, figargs=None):
-
     if figargs is None:
-        return lambda figargs: dynamic_timeseries(col_1, col_2, figargs)
-    col_1_time = pd.to_datetime(col_1)
+        return lambda figargs: timeseries(col_1, col_2, col_max, col_min,
+                                          n_bins, aggregate, hover, static, figargs=figargs)
 
-    if col_max is None:
-        col_max = col_1_time.max()
-    if col_min is None:
-        col_min = col_1_time.min()
-
-    tools = ['box_zoom', 'save', 'reset']
-    if hover:
-        hover = HoverTool(
-            tooltips=[
-                ("Height", " @height"),
-                ("Bin", " [@left{%R %F}, @right{%R %F})")
-            ],
-            formatters={
-                'left': 'datetime',
-                'right': 'datetime'
-            },
-            mode='mouse')
-        tools += [hover]
-
-    truncated = col_1_time[(col_1_time <= col_max) & (col_1_time >= col_min)]
-    tmp = pd.DataFrame({col_1.name: truncated,
-                        'height': col_2,
-                        'splits': pd.cut(pd.to_numeric(truncated), n_bins, right=False)})
-
-    tmp = tmp.groupby('splits')['height'].aggregate(aggregate).reset_index()
-    tmp['left'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.left)))
-    tmp['right'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.right)))
-    source = ColumnDataSource(pd.DataFrame(tmp[['height', 'left', 'right']]))
-    plot = figure(tools=tools, x_axis_type='datetime')
-    plot.quad(top='height', bottom=0,
-              left='left', right='right',
-              line_color='white', source=source, fill_alpha=.5)
+    source = ColumnDataSource(_make_timeseries_source(col_1, col_2, col_max,
+                                                      col_min, n_bins, aggregate))
+    plot = _make_timeseries_plot(hover, source)
     plot = _modify_plot(plot, figargs)
-    return plot
 
+    if static:
+        return plot
 
-def dynamic_timeseries(col_1, col_2, hover=True, figargs=None):
-    '''Creates a time based aggregations of a numeric variable another.
-    This function allows for the user to mean, count, sum or find the min
-    or max of a second variable with regards to the first. It is a generalization
-    of the dynamic histogram function.
-
-    Args:
-        col_1 (pd.Series): The column from which to create bins.
-        col_2 (pd.Series): The column to aggregate
-
-    Example:
-        If the dataframe ``X`` has a columns named ``amount`` and ``date``.
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.dynamic_aggregation(pd.to_numeric(X['date']), X['amount'])
-        >>> hplot.show(plot)
-    '''
-    if figargs is None:
-        return lambda figargs: dynamic_timeseries(col_1, col_2, figargs)
-
-    def modify_doc(doc, col_1, col_2, hover, figargs):
-        col_1_time = pd.to_datetime(col_1)
-        tools = ['box_zoom', 'save', 'reset']
-        if hover:
-            hover = HoverTool(
-                tooltips=[
-                    ("Height", " @height"),
-                    ("Bin", " [@left{%R %F}, @right{%R %F})")
-                ],
-                formatters={
-                    'left': 'datetime',
-                    'right': 'datetime'
-                },
-                mode='mouse')
-            tools += [hover]
-        truncated = col_1_time[(col_1_time <= col_1_time.max()) & (col_1_time >= col_1_time.min())]
-        tmp = pd.DataFrame({col_1.name: truncated,
-                            'height': col_2,
-                            'splits': pd.cut(pd.to_numeric(truncated), 10, right=False)})
-
-        tmp = tmp.groupby('splits')['height'].mean().reset_index()
-        tmp['left'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.left)))
-        tmp['right'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.right)))
-
-        source = ColumnDataSource(pd.DataFrame(tmp[['height', 'left', 'right']]))
-
-        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'], x_axis_type='datetime')
-        plot.quad(top='height', bottom=0,
-                  left='left', right='right',
-                  line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_plot(plot, figargs)
-
+    def modify_doc(doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs):
         def callback(attr, old, new):
+
             try:
-                truncated = col_1_time[
-                    (col_1_time <= range_select.value_as_datetime[1]) &
-                    (col_1_time >= range_select.value_as_datetime[0])]
-                tmp = pd.DataFrame({col_1.name: truncated,
-                                    'height': col_2,
-                                    'splits': pd.cut(
-                                        pd.to_numeric(truncated),
-                                        slider.value,
-                                        right=False)})
-                tmp = tmp.groupby('splits')['height'].aggregate(dropdown.value).reset_index()
-                tmp['left'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.left)))
-                tmp['right'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.right)))
-                source_df = tmp[['height', 'left', 'right']]
-                source.data = ColumnDataSource(source_df).data
+                source.data = ColumnDataSource(
+                    _make_timeseries_source(col_1, col_2,
+                                            col_max=range_select.value_as_datetime[1],
+                                            col_min=range_select.value_as_datetime[0],
+                                            n_bins=slider.value,
+                                            aggregate=dropdown.value)).data
                 dropdown.label = dropdown.value
             except Exception as e:
                 print e
-        slider = Slider(start=1, end=100,
-                        value=10, step=1,
-                        title="Bins")
-        slider.on_change('value', callback)
 
-        range_select = DateRangeSlider(start=col_1_time.min(),
-                                       end=col_1_time.max(),
-                                       value=(col_1_time.min(),
-                                              col_1_time.max()),
-                                       step=1, title='Range', format='%R %F')
-        range_select.on_change('value', callback)
-        dropdown = Dropdown(value='mean', label="mean",
-                            button_type="default",
-                            menu=[('Mean', 'mean'),
-                                  ('Count', 'count'),
-                                  ('Sum', 'sum'),
-                                  ('Max', 'max'),
-                                  ('Min', 'min')])
-        dropdown.on_change('value', callback)
-
+        slider, range_select, dropdown = _timeseries_widgets(
+            col_1, col_2, col_max, col_min, n_bins, aggregate, callback)
         doc.add_root(column(slider, range_select, dropdown, plot))
-    return lambda doc: modify_doc(doc, col_1, col_2, hover, figargs)
+
+    return lambda doc: modify_doc(
+        doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs)
 
 
 # Histogram Functions
@@ -990,83 +888,6 @@ def static_scatterplot_and_label(col1, col2, label, hover=False, figargs=None):
     return plot
 
 
-def dynamic_aggregation(col_1, col_2):
-    '''Creates a dynamic aggregation of one numeric variable by another.
-    This function allows for the user to mean, count, sum or find the min
-    or max of a second variable with regards to the first. It is a generalization
-    of the dynamic histogram function.
-
-    Args:
-        col_1 (pd.Series): The column from which to create bins.
-        col_2 (pd.Series): The column to aggregate
-
-    Example:
-        If the dataframe ``X`` has a columns named ``amount`` and ``date``.
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.dynamic_aggregation(pd.to_numeric(X['date']), X['amount'])
-        >>> hplot.show(plot)
-    '''
-    def modify_doc(doc, col_1, col_2):
-        hover = HoverTool(
-            tooltips=[
-                ("Height", " @height"),
-                ("Bin", " [@left{0.00}, @right{0.00})")
-            ],
-            mode='mouse')
-
-        truncated = col_1[(col_1 <= col_1.max()) & (col_1 >= col_1.min())]
-        tmp = pd.DataFrame({col_1.name: truncated,
-                            'height': col_2,
-                            'splits': pd.cut(col_1, 10, right=False)})
-
-        tmp = tmp.groupby('splits')['height'].mean().reset_index()
-        tmp['left'] = list(tmp['splits'].apply(lambda x: x.left))
-        tmp['right'] = list(tmp['splits'].apply(lambda x: x.right))
-
-        source = ColumnDataSource(pd.DataFrame(tmp[['height', 'left', 'right']]))
-
-        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
-        plot.quad(top='height', bottom=0,
-                  left='left', right='right',
-                  line_color='white', source=source, fill_alpha=.5)
-
-        def callback(attr, old, new):
-            truncated = col_1[(col_1 <= range_select.value[1]) & (col_1 >= range_select.value[0])]
-
-            tmp = pd.DataFrame({col_1.name: truncated,
-                                'height': col_2,
-                                'splits': pd.cut(truncated, slider.value, right=False)})
-            tmp = tmp.groupby('splits')['height'].aggregate(dropdown.value).reset_index()
-
-            tmp['left'] = list(tmp['splits'].apply(lambda x: x.left))
-            tmp['right'] = list(tmp['splits'].apply(lambda x: x.right))
-            source_df = tmp[['height', 'left', 'right']]
-            source.data = ColumnDataSource(source_df).data
-            dropdown.label = dropdown.value
-
-        slider = Slider(start=1, end=100,
-                        value=10, step=1,
-                        title="Bins")
-        slider.on_change('value', callback)
-
-        range_select = RangeSlider(start=col_1.min(),
-                                   end=col_1.max(),
-                                   value=(col_1.min(), col_1.max()),
-                                   step=1, title='Range')
-        range_select.on_change('value', callback)
-        dropdown = Dropdown(value='mean', label="mean",
-                            button_type="default",
-                            menu=[('Mean', 'mean'),
-                                  ('Count', 'count'),
-                                  ('Sum', 'sum'),
-                                  ('Max', 'max'),
-                                  ('Min', 'min')])
-        dropdown.on_change('value', callback)
-        doc.add_root(column(slider, range_select, dropdown, plot))
-    return lambda doc: modify_doc(doc, col_1, col_2)
-
-
 # Piechart Utilities #
 
 
@@ -1158,3 +979,75 @@ def _piechart_widgets(col, sort, mergepast, drop_n, callback):
                          title="Drop Slider")
     drop_slider.on_change('value', callback)
     return sorted_button, merge_slider, drop_slider
+
+
+# Timeseries Utilities #
+
+
+def _make_timeseries_source(col_1, col_2, col_max=None, col_min=None, n_bins=10, aggregate='mean'):
+    col_1_time = pd.to_datetime(col_1)
+    if col_max is None:
+        col_max = col_1_time.max()
+    if col_min is None:
+        col_min = col_1_time.min()
+
+    truncated = col_1_time[(col_1_time <= col_max) & (col_1_time >= col_min)]
+    tmp = pd.DataFrame({col_1.name: truncated,
+                        'height': col_2,
+                        'splits': pd.cut(pd.to_numeric(truncated), n_bins, right=False)})
+
+    tmp = tmp.groupby('splits')['height'].aggregate(aggregate).reset_index()
+    tmp['left'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.left)))
+    tmp['right'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.right)))
+    tmp = tmp[['left', 'right', 'height']]
+    return tmp
+
+
+def _make_timeseries_plot(hover, source):
+    tools = ['box_zoom', 'save', 'reset']
+    if hover:
+        hover = HoverTool(
+            tooltips=[
+                ("Height", " @height"),
+                ("Bin", " [@left{%R %F}, @right{%R %F})")
+            ],
+            formatters={
+                'left': 'datetime',
+                'right': 'datetime'
+            },
+            mode='mouse')
+        tools += [hover]
+    plot = figure(tools=tools, x_axis_type='datetime')
+    plot.quad(top='height', bottom=0,
+              left='left', right='right',
+              line_color='white', source=source, fill_alpha=.5)
+    return plot
+
+
+def _timeseries_widgets(col_1, col_2, col_max, col_min, n_bins, aggregate, callback):
+    col_1_time = pd.to_datetime(col_1)
+    if col_max is None:
+        col_max = col_1_time.max()
+    if col_min is None:
+        col_min = col_1_time.min()
+
+    slider = Slider(start=1, end=100,
+                    value=n_bins, step=1,
+                    title="Bins")
+    slider.on_change('value', callback)
+
+    range_select = DateRangeSlider(start=col_1_time.min(),
+                                   end=col_1_time.max(),
+                                   value=(col_min,
+                                          col_max),
+                                   step=1, title='Range', format='%R %F')
+    range_select.on_change('value', callback)
+    dropdown = Dropdown(value=aggregate, label=aggregate,
+                        button_type="default",
+                        menu=[('mean', 'mean'),
+                              ('count', 'count'),
+                              ('sum', 'sum'),
+                              ('max', 'max'),
+                              ('min', 'min')])
+    dropdown.on_change('value', callback)
+    return slider, range_select, dropdown
