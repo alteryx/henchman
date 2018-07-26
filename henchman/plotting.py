@@ -203,6 +203,61 @@ def scatterplot(col1, col2, y=None, hover=True, dynamic=False):
             col1, col2, hover, figargs=figargs)
 
 
+def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
+              normalized=False, hover=True, static=False, figargs=None):
+    '''Creates a histogram.
+    This function takes a single input and creates a histogram from it.
+    There is an optional second column input for labels, if you would
+    like to see how a label is distributed relative to your numeric
+    variable.
+
+    Args:
+        col (pd.Series): The column from which to make a histogram.
+        y (pd.Series, optional): A binary label that you would like to track.
+        n_bins (int): The number of bins of the histogram. Default is 10.
+        col_max (float): Maximum value to include in histogram.
+        col_min (float): Minimum value to include in histogram.
+        normalized (bool): Whether or not to normalize the columns. Default is False.
+        hover (bool): Whether or not to create a hovertool. Default is True.
+        static (bool): Whether or not to create a static plot. Default is False.
+
+    Example:
+        If the dataframe ``X`` has a column named ``amount`` and
+        a label ``y``, you can compare them with
+
+        >>> import henchman.plotting as hplot
+        >>> plot1 = hplot.histogram(X['amount'], y, normalized=False)
+        >>> hplot.show(plot1)
+
+        If you wanted a single variable histogram instead, omit y:
+
+        >>> plot2 = hplot.histogram(X['amount'], col_max=200, n_bins=20, static=True)
+        >>> hplot.show(plot2)
+    '''
+    if figargs is None:
+        return lambda figargs: histogram(
+            col, y, n_bins, col_max, col_min,
+            normalized, hover, static, figargs=figargs)
+
+    source = ColumnDataSource(_make_histogram_source(col, y, n_bins, col_max, col_min, normalized))
+    plot = _make_histogram_plot(y, hover, source)
+    plot = _modify_plot(plot, figargs)
+
+    if static:
+        return plot
+
+    def modify_doc(doc, col, y, n_bins, col_max, col_min, normalized, figargs):
+        def callback(attr, old, new):
+            source.data = ColumnDataSource(_make_histogram_source(
+                col, y, n_bins=slider.value, col_max=range_select.value[1],
+                col_min=range_select.value[0], normalized=normalized)).data
+
+        slider, range_select = _histogram_widgets(col, y, n_bins, col_max, col_min, callback)
+
+        doc.add_root(column(slider, range_select, plot))
+    return lambda doc: modify_doc(doc, col, y, n_bins, col_max, col_min, normalized, figargs)
+
+
 def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
                aggregate='mean', hover=True, static=False, figargs=None):
     '''Creates a time based aggregations of a numeric variable.
@@ -264,282 +319,6 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
 
     return lambda doc: modify_doc(
         doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs)
-
-
-# Histogram Functions
-
-
-def static_histogram(col, n_bins=10,
-                     col_max=None,
-                     col_min=None, figargs=None):
-    '''Creates a static bokeh histogram.
-    User can modify the number of bins and column bounds.
-
-    Args:
-        col (pd.Series): The column from which to make a histogram.
-        n_bins (int): The number of bins of the histogram.
-        col_max (float): Maximum value to include in histogram.
-        col_min (float): Minimum value to include in histogram
-
-    Example:
-        If the dataframe ``X`` has a column named ``amount``:
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.static_histogram(X['amount'])
-        >>> hplot.show(plot)
-    '''
-    hover = HoverTool(
-        tooltips=[
-            ("Height", " @hist"),
-            ("Bin", " [@left{0.00}, @right{0.00})"),
-        ],
-        mode='mouse')
-    if col_max is None:
-        col_max = col.max()
-    if col_min is None:
-        col_min = col.min()
-    truncated = col[(col <= col_max) & (col >= col_min)]
-    hist, edges = np.histogram(truncated, bins=n_bins, density=False)
-    source = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                            'left': edges[:-1],
-                                            'right': edges[1:]}
-                                           ))
-
-    plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
-    plot.quad(top='hist', bottom=0,
-              left='left', right='right',
-              line_color='white', source=source, fill_alpha=.5)
-    plot = _modify_plot(plot, figargs)
-    return plot
-
-
-def static_histogram_and_label(col, label, n_bins=10,
-                               col_max=None, col_min=None,
-                               normalized=True, figargs=None):
-    '''Creates a static bokeh histogram with binary label.
-    You can use this function to see how a binary label compares with
-    a particular attribute. Can set number of bins, column bounds
-    and whether or not to normalize both functions. Normalizing will
-    lose exact values but can sometimes make the columns easier
-    to compare.
-
-    Args:
-        col (pd.Series): The column from which to make a histogram.
-        label (pd.Series): A binary label that you would like to track.
-        n_bins (int): The number of bins of the histogram.
-        col_max (float): Maximum value to include in histogram.
-        col_min (float): Minimum value to include in histogram
-
-    Example:
-        If the dataframe ``X`` has a column named ``amount`` and
-        a label ``y``, you can compare them with
-
-        >>> import henchman.plotting as hplot
-        >>> plot1 = hplot.static_histogram_and_label(X['amount'], y)
-        >>> hplot.show(plot1)
-
-        If you want the raw number of positive labels in each bin, set normalized
-
-        >>> plot2 = hplot.static_histogram_and_label(X['amount'], y, normalized=False)
-        >>> hplot.show(plot2)
-    '''
-    if col_max is None:
-        col_max = col.max()
-    if col_min is None:
-        col_min = col.min()
-    truncated = col[(col <= col_max) & (col >= col_min)]
-    hist, edges = np.histogram(truncated, bins=n_bins, density=normalized)
-    cols = pd.DataFrame({'col': col, 'label': label})
-
-    label_hist = np.nan_to_num(cols['label'].groupby(
-        pd.cut(col, edges, right=False)).sum().values, 0)
-    if normalized:
-        label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
-    source = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                            'left': edges[:-1],
-                                            'right': edges[1:],
-                                            'label': label_hist}))
-    if normalized:
-        hover = HoverTool(
-            tooltips=[
-                ("Bin", " [@left{0.00}, @right{0.00})"),
-            ],
-            mode='mouse')
-    else:
-        hover = HoverTool(
-            tooltips=[
-                ("Height", " @hist"),
-                ("Bin", " [@left{0.00}, @right{0.00})"),
-            ],
-            mode='mouse')
-
-    plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
-    plot.quad(top='hist', bottom=0, left='left',
-              right='right', line_color='white',
-              source=source, fill_alpha=.5)
-    plot.quad(top='label', bottom=0, left='left',
-              right='right', color='purple',
-              line_color='white', source=source, fill_alpha=.5)
-    plot = _modify_plot(plot, figargs)
-    return plot
-
-
-def dynamic_histogram(col, figargs=None):
-    '''Creates a dynamic histogram.
-    Allows for interactive modification of the static_histogram plot.
-
-    Args:
-        col (pd.Series): The column from which to make the histogram.
-
-    Example:
-        If the dataframe ``X`` has a column named ``amount``.
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.dynamic_histogram(X['amount'])
-        >>> hplot.show(plot)
-    '''
-    def modify_doc(doc, col, figargs):
-        hover = HoverTool(
-            tooltips=[
-                ("Height", " @hist"),
-                ("Bin", " [@left{0.00}, @right{0.00})"),
-            ],
-            mode='mouse')
-
-        truncated = col[(col <= col.max()) & (col >= col.min())]
-        hist, edges = np.histogram(truncated, bins=10, density=False)
-        source = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                                'left': edges[:-1],
-                                                'right': edges[1:]}
-                                               ))
-
-        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
-        plot.quad(top='hist', bottom=0,
-                  left='left', right='right',
-                  line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_plot(plot, figargs)
-
-        def callback(attr, old, new):
-            truncated = col[(col < range_select.value[1]) &
-                            (col > range_select.value[0])]
-            hist, edges = np.histogram(truncated,
-                                       bins=slider.value,
-                                       density=False)
-
-            source.data = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                                         'left': edges[:-1],
-                                                         'right': edges[1:]})).data
-
-        slider = Slider(start=1, end=100,
-                        value=10, step=1,
-                        title="Bins")
-        slider.on_change('value', callback)
-
-        range_select = RangeSlider(start=col.min(),
-                                   end=col.max(),
-                                   value=(col.min(), col.max()),
-                                   step=5, title='Histogram Range')
-        range_select.on_change('value', callback)
-
-        doc.add_root(column(slider, range_select, plot))
-
-    return lambda doc: modify_doc(doc, col, figargs)
-
-
-def dynamic_histogram_and_label(col, label, normalized=True, figargs=None):
-    '''Creates a dynamic histogram with binary label.
-    This function builds the static_histogram_and_label, but allows
-    for modification of the parameters.
-
-    Args:
-        col (pd.Series): The column from which to make a histogram.
-        label (pd.Series): The binary label you'd like to track
-        normalized (bool): Whether or not to normalize both histograms.
-                Default values is ``True``.
-
-    Examples:
-        If the dataframe ``X`` has a column named ``amount`` and
-        a label ``y``, you can compare them with
-
-        >>> import henchman.plotting as hplot
-        >>> plot1 = hplot.dynamic_histogram_and_label(X['amount'], y)
-        >>> hplot.show(plot1)
-
-        If you want the raw number of positive labels in each bin, set normalized
-
-        >>> plot2 = hplot.dynamic_histogram_and_label(X['amount'], y, normalized=False)
-        >>> hplot.show(plot2)
-
-    '''
-    def modify_doc(doc, col, label, normalized, figargs):
-
-        truncated = col[(col <= col.max()) & (col >= col.min())]
-        hist, edges = np.histogram(truncated, bins=10, density=normalized)
-        cols = pd.DataFrame({'col': col, 'label': label})
-
-        label_hist = np.nan_to_num(cols['label'].groupby(
-            pd.cut(col, edges, right=False)).sum().values, 0)
-        if normalized:
-            label_hist = label_hist / \
-                (label_hist.sum() * (edges[1] - edges[0]))
-        source = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                                'left': edges[:-1],
-                                                'right': edges[1:],
-                                                'label': label_hist}))
-        if normalized:
-            hover = HoverTool(
-                tooltips=[
-                    ("Bin", " [@left{0.00}, @right{0.00})"),
-                ],
-                mode='mouse')
-        else:
-            hover = HoverTool(
-                tooltips=[
-                    ("Height", " @hist"),
-                    ("Bin", " [@left{0.00}, @right{0.00})"),
-                ],
-                mode='mouse')
-
-        plot = figure(tools=[hover, 'box_zoom', 'save', 'reset'])
-        plot.quad(top='hist', bottom=0, left='left',
-                  right='right', line_color='white',
-                  source=source, fill_alpha=.5)
-        plot.quad(top='label', bottom=0, left='left',
-                  right='right', color='purple',
-                  line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_plot(plot, figargs)
-
-        def callback(attr, old, new):
-
-            truncated = col[(col < range_select.value[1]) &
-                            (col > range_select.value[0])]
-
-            hist, edges = np.histogram(truncated,
-                                       bins=slider.value,
-                                       density=normalized)
-            label_hist = np.nan_to_num(cols['label'].groupby(
-                pd.cut(col, edges, right=False)).sum().values, 0)
-
-            if normalized:
-                label_hist = label_hist / \
-                    (label_hist.sum() * (edges[1] - edges[0]))
-
-            source.data = ColumnDataSource(pd.DataFrame({'hist': hist,
-                                                         'left': edges[:-1],
-                                                         'right': edges[1:],
-                                                         'label': label_hist})).data
-
-        slider = Slider(start=1, end=100, value=10, step=1, title="Bins")
-        slider.on_change('value', callback)
-
-        range_select = RangeSlider(start=col.min(),
-                                   end=col.max(),
-                                   value=(col.min(), col.max()),
-                                   step=5, title='Histogram Range')
-        range_select.on_change('value', callback)
-
-        doc.add_root(column(slider, range_select, plot))
-    return lambda doc: modify_doc(doc, col, label, normalized, figargs)
 
 
 def feature_importances(X, model, n_feats=5, figargs=None):
@@ -1051,3 +830,75 @@ def _timeseries_widgets(col_1, col_2, col_max, col_min, n_bins, aggregate, callb
                               ('min', 'min')])
     dropdown.on_change('value', callback)
     return slider, range_select, dropdown
+
+# Histogram Utilities #
+
+
+def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
+    if col_max is None:
+        col_max = col.max()
+    if col_min is None:
+        col_min = col.min()
+    truncated = col[(col <= col_max) & (col >= col_min)]
+    hist, edges = np.histogram(truncated, bins=n_bins, density=normalized)
+    cols = pd.DataFrame({'col': col, 'label': y})
+    tmp = pd.DataFrame({'hist': hist,
+                        'left': edges[:-1],
+                        'right': edges[1:]})
+    if y is not None:
+        label_hist = np.nan_to_num(cols['label'].groupby(
+            pd.cut(col, edges, right=False)).sum().values, 0)
+        if normalized:
+            label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+
+        tmp['label'] = label_hist
+    return tmp
+
+
+def _make_histogram_plot(y, hover, source):
+    tools = ['box_zoom', 'save', 'reset']
+    if hover:
+        if y is not None:
+            hover = HoverTool(
+                tooltips=[
+                    ("Height", " @hist"),
+                    ("Label", " @label"),
+                    ("Bin", " [@left{0.00}, @right{0.00})"),
+                ],
+                mode='mouse')
+        else:
+            hover = HoverTool(
+                tooltips=[
+                    ("Height", " @hist"),
+                    ("Bin", " [@left{0.00}, @right{0.00})"),
+                ],
+                mode='mouse')
+        tools += [hover]
+
+    plot = figure(tools=tools)
+    plot.quad(top='hist', bottom=0, left='left',
+              right='right', line_color='white',
+              source=source, fill_alpha=.5)
+
+    if y is not None:
+        plot.quad(top='label', bottom=0, left='left',
+                  right='right', color='purple',
+                  line_color='white', source=source, fill_alpha=.5)
+    return plot
+
+
+def _histogram_widgets(col, y, n_bins, col_max, col_min, callback):
+    if col_max is None:
+        col_max = col.max()
+    if col_min is None:
+        col_min = col.min()
+
+    slider = Slider(start=1, end=100, value=n_bins, step=1, title="Bins")
+    slider.on_change('value', callback)
+
+    range_select = RangeSlider(start=col.min(),
+                               end=col.max(),
+                               value=(col_min, col_max),
+                               step=5, title='Histogram Range')
+    range_select.on_change('value', callback)
+    return slider, range_select
