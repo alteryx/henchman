@@ -58,7 +58,7 @@ def show_template():
     return None
 
 
-def _modify_figure(plot, figargs):
+def _modify_plot(plot, figargs):
     '''Add text and modify figure attributes. This is an internal
     function which allows for figure attributes to be passed into
     interactive functions.
@@ -139,20 +139,19 @@ def show(plot, png=False,
     return io.show(figure)
 
 
-def piechart(col, sort=True, mergepast=10,
-             drop_n=None, hover=True, dynamic=True):
+def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=False, figargs=None):
     '''Creates a piechart.
     Finds all of the unique values in a column and makes a piechart
     out of them. By default, this will make a dynamic piechart with
     sliders for the different parameters.
-
 
     Args:
         col (pd.Series): The column from which to make the piechart.
         sort (bool): Whether or not to sort by frequency for static plot. Default is True.
         mergepast (int): Merge infrequent column values for static plot. Default is 10.
         drop_n (int): How many high frequency values to drop for static plot. Default is None.
-        dynamic (bool): Whether or not to make a dynamic piechart. Default is True.
+        hover (bool): Whether or not to include a hovertool. Default is True.
+        static (bool): Whether to return a static piechart. Default is False.
 
     Example:
         If the dataframe ``X`` has a column named ``car_color``:
@@ -164,36 +163,34 @@ def piechart(col, sort=True, mergepast=10,
         For a static plot:
 
         >>> import henchman.plotting as hplot
-        >>> plot = hplot.piechart(X['car_color'], sort=False, mergepast=None, dynamic=False)
+        >>> plot = hplot.piechart(X['car_color'], sort=False, static=True)
         >>> hplot.show(plot)
     '''
-    if dynamic:
-        return lambda figargs: dynamic_piechart(
-            col, hover=hover, figargs=figargs)
-    else:
-        return lambda figargs: static_piechart(
-            col, sort=sort, mergepast=mergepast,
-            drop_n=drop_n, hover=hover, figargs=figargs)
+    if figargs is None:
+        return lambda figargs: piechart(col, sort, mergepast, drop_n, hover, static, figargs)
 
+    source = ColumnDataSource(_make_piechart_source(col, mergepast, sort, drop_n))
+    plot = _make_piechart_plot(hover, source)
+    plot = _modify_plot(plot, figargs)
 
-def histogram(col, y=None, n_bins=10, col_max=None, col_min=None, normalized=False,
-              dynamic=True):
-    if dynamic:
-        if y is not None:
-            return lambda figargs: dynamic_histogram_and_label(
-                col, y, normalized=normalized, figargs=figargs)
-        else:
-            return lambda figargs: dynamic_histogram(
-                col, figargs=figargs)
-    else:
-        if y is not None:
-            return lambda figargs: static_histogram_and_label(
-                col, y, n_bins=n_bins, col_max=col_max, col_min=col_min,
-                normalized=normalized, figargs=figargs)
-        else:
-            return lambda figargs: static_histogram(
-                col, n_bins=n_bins, col_max=col_max,
-                col_min=col_min, figargs=figargs)
+    if static:
+        return plot
+
+    def modify_doc(doc, col, sort, mergepast, drop_n, hover, figargs):
+        def callback(attr, old, new):
+            source.data = ColumnDataSource(
+                _make_piechart_source(col,
+                                      sort=sorted_button.active,
+                                      mergepast=merge_slider.value,
+                                      drop_n=drop_slider.value)).data
+
+        sorted_button, merge_slider, drop_slider = _piechart_widgets(
+            col, sort, mergepast, drop_n, callback)
+
+        doc.add_root(
+            column(row(column(merge_slider, drop_slider), sorted_button), plot))
+
+    return lambda doc: modify_doc(doc, col, sort, mergepast, drop_n, hover, figargs)
 
 
 def scatterplot(col1, col2, y=None, hover=True, dynamic=False):
@@ -272,7 +269,7 @@ def static_timeseries(col_1, col_2, col_max=None, col_min=None,
     plot.quad(top='height', bottom=0,
               left='left', right='right',
               line_color='white', source=source, fill_alpha=.5)
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -326,7 +323,7 @@ def dynamic_timeseries(col_1, col_2, hover=True, figargs=None):
         plot.quad(top='height', bottom=0,
                   left='left', right='right',
                   line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_figure(plot, figargs)
+        plot = _modify_plot(plot, figargs)
 
         def callback(attr, old, new):
             try:
@@ -335,7 +332,10 @@ def dynamic_timeseries(col_1, col_2, hover=True, figargs=None):
                     (col_1_time >= range_select.value_as_datetime[0])]
                 tmp = pd.DataFrame({col_1.name: truncated,
                                     'height': col_2,
-                                    'splits': pd.cut(pd.to_numeric(truncated), slider.value, right=False)})
+                                    'splits': pd.cut(
+                                        pd.to_numeric(truncated),
+                                        slider.value,
+                                        right=False)})
                 tmp = tmp.groupby('splits')['height'].aggregate(dropdown.value).reset_index()
                 tmp['left'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.left)))
                 tmp['right'] = list(tmp['splits'].apply(lambda x: pd.to_datetime(x.right)))
@@ -366,169 +366,6 @@ def dynamic_timeseries(col_1, col_2, hover=True, figargs=None):
 
         doc.add_root(column(slider, range_select, dropdown, plot))
     return lambda doc: modify_doc(doc, col_1, col_2, hover, figargs)
-
-# Pie Chart Functions #
-
-
-def _make_pie_source(col, mergepast=10, sort=True, drop_n=None):
-    values = col.reset_index().groupby(col.name).count()
-    total = float(col.shape[0])
-
-    counts = values[values.columns[0]].tolist()
-    percents = [x/total for x in counts]
-    tmp = pd.DataFrame({'names': values.index,
-                        'counts': counts,
-                        'percents': percents})
-    if sort:
-        tmp = tmp.sort_values(by='counts', ascending=False)
-
-    if drop_n:
-        tmp = tmp.iloc[drop_n:]
-        tmp['percents'] = tmp['percents']/tmp['percents'].sum()
-    starts = []
-    ends = []
-    loc = 0
-    for perc in tmp['percents']:
-        starts.append(loc)
-        loc += 2*pi*perc
-        ends.append(loc)
-    tmp['starts'] = starts
-    tmp['ends'] = ends
-
-    if mergepast is not None and mergepast < tmp.shape[0]:
-        percent = tmp.iloc[mergepast:]['percents'].sum()
-        count = tmp.iloc[mergepast:]['counts'].sum()
-        start = tmp.iloc[mergepast:mergepast+1]['starts'].values
-        end = tmp.iloc[-1:]['ends'].values
-        tmp = pd.concat([tmp.iloc[:mergepast],
-                         pd.DataFrame({'names': ['Other'],
-                                       'counts': [count],
-                                       'percents': [percent],
-                                       'starts': start,
-                                       'ends': end})])
-    tmp['colors'] = [Category20[20][i % 20]
-                     for i, _ in enumerate(tmp['names'])]
-
-    return tmp
-
-
-def static_piechart(col, sort=True, mergepast=10, drop_n=None, hover=True, figargs=None):
-    '''Creates a static piechart.
-    Finds all of the unique values in a column and makes a piechart
-    out of them. By default, the chart will be sorted and merge together
-    any values past the 10th most common.
-
-    Args:
-        col (pd.Series): The column from which to make the piechart.
-        sort (bool): Whether or not to sort by frequency. Default is True.
-        mergepast (int): Merge infrequent column values. Default is 10.
-        drop_n (int): How many high frequency values to drop. Default is None.
-
-    Example:
-        If the dataframe ``X`` has a column named ``car_color``:
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.static_piechart(X['car_color'], sort=False, mergepast=None)
-        >>> hplot.show(plot)
-    '''
-
-    source = ColumnDataSource(_make_pie_source(col, mergepast, sort, drop_n))
-    tools = ['box_zoom', 'save', 'reset']
-    if hover:
-        hover = HoverTool(
-            tooltips=[
-                ("Name", " @names"),
-                ("Count", " @counts"),
-            ],
-            mode='mouse')
-        tools = tools + [hover]
-    plot = figure(height=500, tools=tools, toolbar_location='above')
-    plot.wedge(x=0, y=0,
-               radius=0.3,
-               start_angle='starts',
-               end_angle='ends',
-               line_color='white',
-               color='colors',
-               legend='names',
-               source=source)
-    plot.axis.axis_label = None
-    plot.axis.visible = False
-    plot.grid.grid_line_color = None
-    plot = _modify_figure(plot, figargs)
-    return plot
-
-
-def dynamic_piechart(col, hover=True, figargs=None):
-    '''Creates a dynamic piechart.
-    This allows the user to interactively change the arguments
-    to a static piechart.
-
-    Args:
-        col (pd.Series): The column from which to make the piechart.
-
-    Example:
-        If the dataframe ``X`` has a column named ``car_color``:
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.dynamic_piechart(X['car_color'])
-        >>> hplot.show(plot)
-    '''
-    def modify_doc(doc, col, hover, figargs=None):
-        n_values = col.nunique()
-        source = ColumnDataSource(_make_pie_source(col,
-                                                   mergepast=n_values))
-        tools = ['box_zoom', 'save', 'reset']
-        if hover:
-            hover = HoverTool(
-                tooltips=[
-                    ("Name", " @names"),
-                    ("Count", " @counts"),
-                ],
-                mode='mouse')
-            tools = tools + [hover]
-        plot = figure(height=500, tools=tools, toolbar_location='above')
-        plot.wedge(x=0, y=0,
-                   radius=0.3,
-                   start_angle='starts',
-                   end_angle='ends',
-                   line_color='white',
-                   color='colors',
-                   legend='names',
-                   source=source)
-        plot.axis.axis_label = None
-        plot.axis.visible = False
-        plot.grid.grid_line_color = None
-        plot = _modify_figure(plot, figargs)
-
-        def callback(attr, old, new):
-
-            source.data = ColumnDataSource(
-                _make_pie_source(col,
-                                 sort=sorted_button.active,
-                                 mergepast=merge_slider.value,
-                                 drop_n=drop_slider.value)).data
-        sorted_button = CheckboxGroup(
-            labels=["Sorted"], active=[0, 1])
-        sorted_button.on_change('active', callback)
-
-        merge_slider = Slider(start=1, end=n_values,
-                              value=n_values, step=1,
-                              title="Merge Slider")
-        merge_slider.on_change('value', callback)
-        drop_slider = Slider(start=0, end=n_values,
-                             value=0, step=1,
-                             title="Drop Slider")
-        drop_slider.on_change('value', callback)
-
-        doc.add_root(
-            column(
-                row(
-                    column(merge_slider, drop_slider), sorted_button
-                ),
-                plot
-            ))
-
-    return lambda doc: modify_doc(doc, col, hover, figargs)
 
 
 # Histogram Functions
@@ -574,7 +411,7 @@ def static_histogram(col, n_bins=10,
     plot.quad(top='hist', bottom=0,
               left='left', right='right',
               line_color='white', source=source, fill_alpha=.5)
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -645,7 +482,7 @@ def static_histogram_and_label(col, label, n_bins=10,
     plot.quad(top='label', bottom=0, left='left',
               right='right', color='purple',
               line_color='white', source=source, fill_alpha=.5)
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -682,7 +519,7 @@ def dynamic_histogram(col, figargs=None):
         plot.quad(top='hist', bottom=0,
                   left='left', right='right',
                   line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_figure(plot, figargs)
+        plot = _modify_plot(plot, figargs)
 
         def callback(attr, old, new):
             truncated = col[(col < range_select.value[1]) &
@@ -772,7 +609,7 @@ def dynamic_histogram_and_label(col, label, normalized=True, figargs=None):
         plot.quad(top='label', bottom=0, left='left',
                   right='right', color='purple',
                   line_color='white', source=source, fill_alpha=.5)
-        plot = _modify_figure(plot, figargs)
+        plot = _modify_plot(plot, figargs)
 
         def callback(attr, old, new):
 
@@ -842,7 +679,7 @@ def feature_importances(X, model, n_feats=5, figargs=None):
     plot.toolbar_location = None
     plot.yaxis.major_label_text_font_size = '10pt'
 
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -883,7 +720,7 @@ def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1, figargs=None):
     plot.yaxis.axis_label = 'True Positive Rate'
 
     plot.line(x=fpr, y=fpr, color='red', line_dash='dashed')
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return(plot)
 
 
@@ -967,7 +804,7 @@ def dendrogram(D, figargs=None):
             SaveTool(),
             ResetTool())
 
-        plot = _modify_figure(plot, figargs)
+        plot = _modify_plot(plot, figargs)
 
         data_table = DataTable(source=step_source,
                                columns=[TableColumn(field='step',
@@ -1039,7 +876,7 @@ def f1(X, y, model, n_precs=1000, n_splits=1, figargs=None):
 
     plot.xaxis.axis_label = 'Threshold'
     plot.title.text = 'Precision, Recall, and F1 by Threshold'
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
 
     return(plot)
 
@@ -1090,7 +927,7 @@ def static_scatterplot(col1, col2, hover=True, figargs=None):
                  y='y',
                  source=source,
                  alpha=.5)
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -1149,7 +986,7 @@ def static_scatterplot_and_label(col1, col2, label, hover=False, figargs=None):
                  legend='label',
                  source=source,
                  alpha=.8)
-    plot = _modify_figure(plot, figargs)
+    plot = _modify_plot(plot, figargs)
     return plot
 
 
@@ -1228,3 +1065,96 @@ def dynamic_aggregation(col_1, col_2):
         dropdown.on_change('value', callback)
         doc.add_root(column(slider, range_select, dropdown, plot))
     return lambda doc: modify_doc(doc, col_1, col_2)
+
+
+# Piechart Utilities #
+
+
+def _make_piechart_source(col, mergepast=None, sort=True, drop_n=None):
+    if mergepast is None:
+        mergepast = col.nunique()
+    values = col.reset_index().groupby(col.name).count()
+    total = float(col.shape[0])
+
+    counts = values[values.columns[0]].tolist()
+    percents = [x / total for x in counts]
+    tmp = pd.DataFrame({'names': values.index,
+                        'counts': counts,
+                        'percents': percents})
+    if sort:
+        tmp = tmp.sort_values(by='counts', ascending=False)
+
+    if drop_n:
+        tmp = tmp.iloc[drop_n:]
+        tmp['percents'] = tmp['percents']/tmp['percents'].sum()
+    starts = []
+    ends = []
+    loc = 0
+    for perc in tmp['percents']:
+        starts.append(loc)
+        loc += 2*pi*perc
+        ends.append(loc)
+    tmp['starts'] = starts
+    tmp['ends'] = ends
+
+    if mergepast < tmp.shape[0]:
+        percent = tmp.iloc[mergepast:]['percents'].sum()
+        count = tmp.iloc[mergepast:]['counts'].sum()
+        start = tmp.iloc[mergepast:mergepast+1]['starts'].values
+        end = tmp.iloc[-1:]['ends'].values
+        tmp = pd.concat([tmp.iloc[:mergepast],
+                         pd.DataFrame({'names': ['Other'],
+                                       'counts': [count],
+                                       'percents': [percent],
+                                       'starts': start,
+                                       'ends': end})])
+    tmp['colors'] = [Category20[20][i % 20]
+                     for i, _ in enumerate(tmp['names'])]
+
+    return tmp
+
+
+def _make_piechart_plot(hover, source):
+    tools = ['box_zoom', 'save', 'reset']
+    if hover:
+        hover = HoverTool(
+            tooltips=[
+                ("Name", " @names"),
+                ("Count", " @counts"),
+                ("Percent", " @percents{0%}"),
+            ],
+            mode='mouse')
+        tools = tools + [hover]
+    plot = figure(height=500, tools=tools, toolbar_location='above')
+    plot.wedge(x=0, y=0,
+               radius=0.3,
+               start_angle='starts',
+               end_angle='ends',
+               line_color='white',
+               color='colors',
+               legend='names',
+               source=source)
+    plot.axis.axis_label = None
+    plot.axis.visible = False
+    plot.grid.grid_line_color = None
+    return plot
+
+
+def _piechart_widgets(col, sort, mergepast, drop_n, callback):
+    if sort:
+        active = [0]
+    else:
+        active = []
+    sorted_button = CheckboxGroup(
+        labels=["Sorted"], active=active)
+    sorted_button.on_change('active', callback)
+
+    merge_slider = Slider(start=1, end=col.nunique(),
+                          value=mergepast or col.nunique(), step=1,
+                          title="Merge Slider")
+    merge_slider.on_change('value', callback)
+    drop_slider = Slider(start=0, end=col.nunique(),
+                         value=drop_n or 0, step=1,
+                         title="Drop Slider")
+    drop_slider.on_change('value', callback)
+    return sorted_button, merge_slider, drop_slider
