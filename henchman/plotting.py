@@ -44,7 +44,11 @@ import networkx as nx
 
 
 def show_template():
-    '''Prints a template for `show`.
+    '''Prints a template for `show`. See :func:`show <henchman.plotting.show>` for details.
+
+    Example:
+        >>> import henchman.plotting as hplot
+        >>> hplot.show_template()
     '''
     print('show(plot,\n'
           '     png=False,\n'

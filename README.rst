@@ -62,7 +62,7 @@ To install Henchman, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install henchman
+    $ python -m pip install ft-henchman
 
 This is the preferred method to install Henchman, as it will always install the most recent stable release.
 
