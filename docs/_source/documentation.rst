@@ -221,10 +221,10 @@ for some example bokeh plots.
 
     show
     show_template
-    histogram
     piechart
-    scatterplot
+    histogram
     timeseries
+    scatter
     dendrogram
     feature_importances
     roc_auc

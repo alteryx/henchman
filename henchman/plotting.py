@@ -7,7 +7,7 @@ Contents:
         show
         piechart
         histogram
-        scatterplot
+        scatter
         timeseries
         dendrogram
         feature_importances
@@ -193,16 +193,6 @@ def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=Fal
     return lambda doc: modify_doc(doc, col, sort, mergepast, drop_n, hover, figargs)
 
 
-def scatterplot(col1, col2, y=None, hover=True, dynamic=False):
-    assert (not dynamic)
-    if y is not None:
-        return lambda figargs: static_scatterplot_and_label(
-            col1, col2, y, hover, figargs=figargs)
-    else:
-        return lambda figargs: static_scatterplot(
-            col1, col2, hover, figargs=figargs)
-
-
 def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
               normalized=False, hover=True, static=False, figargs=None):
     '''Creates a histogram.
@@ -321,6 +311,58 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs)
 
 
+def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
+            hover=False, static=False, figargs=None):
+    '''Creates a scatter plot of two variables.
+    This function allows for the display of two variables with
+    an optional argument to groupby. In its dynamic form, this
+    allows for the user to see what two variable looks like as
+    grouped by another. A standard example would be to look at
+    the "last" row for a column that's changing over time.
+
+    Args:
+        col_1 (pd.Series): The x-values of the plotted points.
+        col_2 (pd.Series): The y-values of the plotted points.
+        label (pd.Series, optional): A numeric label to be used in the hovertool.
+        agg (pd.Series, optional): A categorical variable to aggregate by.
+        aggregate (str): The aggregation to use. Options are 'mean', 'last', 'sum', 'max' and 'min'.
+        hover (bool): Whether or not to show the hovertool.
+        static (bool): Whether or not to make a dyanmic plot. Default is False.
+
+    Example:
+        If the dataframe ``X`` has a columns named ``amount`` and ``quantity``.
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.scatter(X['amount'], X['quantity'])
+        >>> hplot.show(plot)
+
+        If you would like to see the amount, quantity pair as aggregated by the ``month`` column:
+
+        >>> plot2 = hplot.scatter(X['date'], X['amount'], agg=X['month'], aggregate='mean')
+        >>> hplot.show(plot2)
+    '''
+    if figargs is None:
+        return lambda figargs: scatter(
+            col_1, col_2, agg, label, aggregate, hover, static, figargs=figargs)
+    source = ColumnDataSource(_make_scatter_source(col_1, col_2, agg, label, aggregate))
+    plot = _make_scatter_plot(col_1, col_2, label, agg, hover, source)
+    plot = _modify_plot(plot, figargs)
+    if static:
+        return plot
+
+    def modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs):
+        def callback(attr, old, new):
+            source.data = ColumnDataSource(
+                _make_scatter_source(col_1, col_2, agg, label, aggregate=dropdown.value)).data
+            dropdown.label = dropdown.value
+        dropdown = _scatter_widgets(col_1, col_2, aggregate, callback)
+        if agg is not None:
+            doc.add_root(column(dropdown, plot))
+        else:
+            doc.add_root(plot)
+    return lambda doc: modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs)
+
+
 def feature_importances(X, model, n_feats=5, figargs=None):
     '''Plot feature importances.
 
@@ -402,7 +444,7 @@ def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1, figargs=None):
 
 
 def dendrogram(D, figargs=None):
-    '''Creates a dynamic dendrogram plot.
+    '''Creates a dendrogram plot.
     This plot can show full structure of a given dendrogram.
 
     Args:
@@ -413,7 +455,7 @@ def dendrogram(D, figargs=None):
         >>> from henchman.plotting import show
         >>> import henchman.plotting as hplot
         >>> D = Dendrogram(X)
-        >>> plot = hplot.dynamic_dendrogram(D)
+        >>> plot = hplot.dendrogram(D)
         >>> show(plot)
     '''
     if figargs is None:
@@ -556,115 +598,6 @@ def f1(X, y, model, n_precs=1000, n_splits=1, figargs=None):
     plot = _modify_plot(plot, figargs)
 
     return(plot)
-
-# Scatterplot Functions
-
-
-def _make_scatter_source(col1, col2):
-    tmp = pd.DataFrame({col1.name: col1, col2.name: col2})
-    tmp['pairs'] = tmp.apply(lambda row: (row[0], row[1]), axis=1)
-    source = pd.DataFrame(tmp.groupby('pairs').first())
-    source['count'] = tmp.groupby('pairs').count().iloc[:, 1]
-    source['x'] = source[col1.name]
-    source['y'] = source[col2.name]
-    return source
-
-
-def static_scatterplot(col1, col2, hover=True, figargs=None):
-    '''Creates a static scatterplot.
-    Plots two numeric variables against one another. In this function,
-    we only take one from each numeric pair and count how many times it
-    appears in the data.
-
-
-    Args:
-        col1 (pd.Series): The column to use for the x_axis.
-        col2 (pd.Series): The column to use for the y_axis.
-        hover (bool): Whether or not to include the hover tooltip. Default is True.
-
-    Example:
-        If the dataframe ``X`` has columns named ``amount`` and ``num_purchases``:
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.static_scatterplot(X['num_purchases'], X['amount'])
-        >>> hplot.show(plot)
-    '''
-    source = ColumnDataSource(_make_scatter_source(col1, col2))
-    tools = ['box_zoom', 'save', 'reset']
-    if hover:
-        hover = HoverTool(tooltips=[
-            (col1.name, '@x'),
-            (col2.name, '@y'),
-            ('count', '@count'),
-        ])
-        tools += [hover]
-
-    plot = figure(tools=tools)
-    plot.scatter(x='x',
-                 y='y',
-                 source=source,
-                 alpha=.5)
-    plot = _modify_plot(plot, figargs)
-    return plot
-
-
-def _make_scatter_label_source(col1, col2, label):
-    tmp = pd.DataFrame({col1.name: col1, col2.name: col2, label.name: label})
-    tmp['pairs'] = tmp.apply(lambda row: (row[0], row[1], row[2]), axis=1)
-    source = tmp
-
-    source['x'] = source[col1.name]
-    source['y'] = source[col2.name]
-    source['label'] = source[label.name]
-
-    label_to_int = {name: i for i, name in enumerate(label.unique())}
-    colors = [Category20[20][label_to_int[value] % 20 + 1] for value in source['label']]
-
-    source['color'] = colors
-    return source
-
-
-def static_scatterplot_and_label(col1, col2, label, hover=False, figargs=None):
-    '''Creates a static scatterplot with label information.
-    Plots two numeric variables against one another colors
-    the results by a binary label. This can give information on if
-    these two columns are related to a label. Unlike static_scatterplot,
-    this function does not start by reducing to unique values.
-    Use the hovertool at your own risk.
-
-    Args:
-        col1 (pd.Series): The column to use for the x_axis.
-        col2 (pd.Series): The column to use for the y_axis.
-        label (pd.Series): The binary label.
-        hover (bool): Whether or not to include the hover tooltip. Default is False.
-
-    Example:
-        If the dataframe ``X`` has columns named ``amount``
-        and ``num_purchases`` with a binary label ``y``:
-
-        >>> import henchman.plotting as hplot
-        >>> plot = hplot.static_scatterplot_and_label(X['num_purchases'], X['amount'], y)
-        >>> hplot.show(plot)
-    '''
-    source = ColumnDataSource(_make_scatter_label_source(col1, col2, label))
-    tools = ['box_zoom', 'save', 'reset']
-    if hover:
-        hover = HoverTool(tooltips=[
-            (col1.name, '@x'),
-            (col2.name, '@y'),
-            (label.name, '@label'),
-        ])
-        tools += [hover]
-
-    plot = figure(tools=tools)
-    plot.scatter(x='x',
-                 y='y',
-                 color='color',
-                 legend='label',
-                 source=source,
-                 alpha=.8)
-    plot = _modify_plot(plot, figargs)
-    return plot
 
 
 # Piechart Utilities #
@@ -902,3 +835,53 @@ def _histogram_widgets(col, y, n_bins, col_max, col_min, callback):
                                step=5, title='Histogram Range')
     range_select.on_change('value', callback)
     return slider, range_select
+
+
+# Scatter Utilities #
+
+def _make_scatter_source(col_1, col_2, agg=None, label=None, aggregate='last'):
+    tmp = pd.DataFrame({'col_1': col_1, 'col_2': col_2})
+
+    if label is not None:
+        tmp['label'] = label
+
+    if agg is not None:
+        tmp['agg'] = agg
+        tmp = tmp.groupby('agg').aggregate(aggregate).reset_index()
+
+    return tmp
+
+
+def _make_scatter_plot(col_1, col_2, label, agg, hover, source):
+    tools = ['box_zoom', 'save', 'reset']
+    if hover:
+        hover = HoverTool(tooltips=[
+            (col_1.name, ' @col_1'),
+            (col_2.name, ' @col_2'),
+        ])
+        if label is not None:
+            hover.tooltips += [('label', ' @label')]
+
+        if agg is not None:
+            hover.tooltips += [('agg', ' @agg')]
+
+        tools += [hover]
+    plot = figure(tools=tools)
+    plot.scatter(x='col_1',
+                 y='col_2',
+                 source=source,
+                 alpha=.8)
+
+    return plot
+
+
+def _scatter_widgets(col_1, col_2, aggregate, callback):
+    dropdown = Dropdown(value=aggregate, label=aggregate,
+                        button_type="default",
+                        menu=[('mean', 'mean'),
+                              ('last', 'last'),
+                              ('sum', 'sum'),
+                              ('max', 'max'),
+                              ('min', 'min')])
+    dropdown.on_change('value', callback)
+    return dropdown
