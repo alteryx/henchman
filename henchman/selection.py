@@ -126,7 +126,7 @@ class Dendrogram():
                 # Strip nans
                 uniques = [x for x in uniques if not math.isnan(x)]
                 # Take max_threshes evenly spaced thresholds
-                uniques = uniques[::(len(uniques)/max_threshes + 1)]
+                uniques = uniques[::int(np.floor((len(uniques)/max_threshes)) + 1)]
 
         self.threshlist = uniques
 
@@ -138,7 +138,7 @@ class Dendrogram():
         Args:
             step (int): Which position in self.threshlist to show features from.
         '''
-        featurelist = [self.columns[x] for x in self.graphs[step].iterkeys()]
+        featurelist = [self.columns[x] for x, _ in self.graphs[step].items()]
         return featurelist
 
     def score_at_point(self, X, y, step, scoring_func):

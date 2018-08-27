@@ -32,8 +32,10 @@ def create_holdout(X, y, split_size=.3):
 def _fit_predict(X_train, X_test, y_train, y_test, model, metric):
     model = model
     model.fit(X_train, y_train)
-    if metric.func_name == 'roc_auc_score':
+
+    if metric.__name__ == 'roc_auc_score':
         return metric(y_test, model.predict_proba(X_test)[:, 1]), model
+
     preds = model.predict(X_test)
     return metric(y_test, preds), model
 

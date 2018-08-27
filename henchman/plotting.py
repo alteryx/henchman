@@ -305,7 +305,7 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
                                             aggregate=dropdown.value)).data
                 dropdown.label = dropdown.value
             except Exception as e:
-                print e
+                print(e)
 
         slider, range_select, dropdown = _timeseries_widgets(
             col_1, col_2, col_max, col_min, n_bins, aggregate, callback)
