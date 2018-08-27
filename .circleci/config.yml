@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/henchman
+    docker:
+        - image: themattrix/tox
+    steps:
+      - checkout
+      - run: pyenv local 2.7.13 3.6.0
+      - run: make install
+      - run: tox

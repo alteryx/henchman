@@ -1,0 +1,40 @@
+package:
+  name: henchman
+  version: "0.0.2"
+
+source:
+  path: ../henchman
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python {{ python }}
+    - setuptools
+    - numpy
+    - bokeh
+    - scikit-learn
+    - networkx
+    - pytest-runner
+    - pytest
+
+  run:
+    - python
+    - setuptools
+    - numpy
+    - bokeh
+    - scikit-learn
+    - networkx
+    - pytest-runner
+    - pytest
+
+test:
+  imports:
+    - henchman
+
+about:
+  home: https://github.com/featurelabs/henchman
+  license: BSD-3
+  license_file: LICENSE
+  summary: A collection of notebook utilities for data science.
