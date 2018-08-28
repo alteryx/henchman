@@ -9,9 +9,6 @@ from setuptools.command.build_ext import build_ext as _build_ext
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 requirements = ['pandas>=0.20.3',
                 'bokeh>=0.12.16',
                 'scikit-learn>=0.19.1',
@@ -37,7 +34,7 @@ setup(
     description="A collection of utility functions for making demo notebooks.",
     install_requires=requirements,
     license="BSD 3-clause",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     include_package_data=True,
     keywords='henchman',
     name='henchman',
