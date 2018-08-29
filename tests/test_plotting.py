@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Tests for `learning` module"""
+import pandas as pd
+import pytest
+
+import henchman.plotting as hplot
+import henchman.learning as learning
+from sklearn.ensemble import RandomForestClassifier
+
+
+@pytest.fixture
+def fm():
+    fm = pd.read_csv('./tests/sample_data/sample_fm.csv')
+    return fm
+
+
+def test_show_template(capsys):
+    hplot.show_template()
+    output_str, _ = capsys.readouterr()
+    output = output_str.split('\n')
+    trueoutput = ['show(plot,', '     png=False,',
+                  '     width=None,', '     height=None,',
+                  "     title='Temporary title',", "     x_axis='my xaxis name',",
+                  "     y_axis='my yaxis name',", '     x_range=(0, 10) or None,',
+                  '     y_range=(0, 10) or None)', '', '']
+
+    for i, value in enumerate(trueoutput):
+        assert output[i] == value
+
+
+def test_make_piechart_source(fm):
+    pie_df = hplot._make_piechart_source(fm['flights.carrier'], mergepast=2, sort=False, drop_n=1)
+    names = pie_df['names'].values
+    truevalues = ['AS', 'B6', 'Other']
+
+    assert pie_df.shape[1] == 6
+    for i, value in enumerate(truevalues):
+        assert names[i] == value
+
+
+def test_make_histogram_source(fm):
+    hist_df1 = hplot._make_histogram_source(fm['flights.distance_group'],
+                                            y=None,
+                                            n_bins=10,
+                                            col_max=13,
+                                            col_min=-1,
+                                            normalized=True)
+    hist_df2 = hplot._make_histogram_source(fm['flights.distance_group'],
+                                            y=fm['label'],
+                                            n_bins=10,
+                                            col_max=None,
+                                            col_min=None,
+                                            normalized=False)
+    assert hist_df1.shape[1] == (hist_df2.shape[1] - 1)
+
+    truehist = [12, 21, 19, 12, 10, 4, 4, 2, 3, 13]
+    for i, value in enumerate(truehist):
+        assert hist_df2['hist'].values[i] == value
+
+
+def test_make_timeseries_source(fm):
+    fm_with_time = fm.reset_index()
+    fm_with_time['time'] = pd.to_datetime(fm_with_time['time'])
+    col_1 = fm_with_time['time']
+    col_2 = fm_with_time['label']
+
+    time_df = hplot._make_timeseries_source(col_1, col_2)
+    truelabelmean = [0.11111111, 0.09090909, 0., 0.18181818, 0.11111111,
+                     0.08333333,  0.22222222, 0., 0.2, 0.07692308]
+    for i, value in enumerate(truelabelmean):
+        assert (time_df['height'].values[i] - value) < .00001
+
+
+def test_make_scatter_source(fm):
+
+    col_1 = fm['scheduled_elapsed_time']
+    col_2 = fm['distance']
+    agg = fm['flights.carrier']
+    scatter_df = hplot._make_scatter_source(col_1, col_2, agg, label=fm['label'], aggregate='last')
+    true_last_distance = [1258., 954., 200., 1535., 2556., 236., 612., 867., 2288., 967.]
+    for i, value in enumerate(true_last_distance):
+        assert scatter_df['col_2'].values[i] == value

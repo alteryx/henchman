@@ -103,7 +103,7 @@ def create_model(X, y, model=None, metric=None,
                                             y_train, y_test, model, metric)
             scorelist.append(score)
         if _return_df:
-            return scorelist, fit_model, (X_train, X_test, y_train, y_test)
+            return (scorelist, fit_model), (X_train, X_test, y_train, y_test)
         return scorelist, fit_model
 
 
