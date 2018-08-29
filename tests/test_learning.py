@@ -12,9 +12,7 @@ from sklearn.metrics import f1_score
 
 @pytest.fixture
 def df():
-    """See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    X = pd.read_csv('./docs/fm.csv')
+    X = pd.read_csv('./tests/sample_data/sample_fm_enc.csv')
     y = X.pop('label')
     return X, y
 
