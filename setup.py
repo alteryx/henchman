@@ -14,7 +14,8 @@ requirements = ['pandas>=0.20.3',
                 'scikit-learn>=0.19.1',
                 'networkx>=2.1',
                 'scipy>=1.0.0',
-                'numpy>=1.13.3']
+                'numpy>=1.13.3',
+                'ipython>=5.4']
 
 setup_requirements = ['pytest-runner', ]
 
