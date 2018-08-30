@@ -111,6 +111,14 @@ class Dendrogram():
         # Make graphs for every thresh
         self._build_graphs()
 
+    def set_params(self, **params):
+        '''Method to functionally assign parameters.
+        Expects a dictionary **params as input.
+        '''
+        for key in params:
+            setattr(self, key, params[key])
+        return self
+
     def _find_all_graphs(self):
 
         self.graphs = []
@@ -173,7 +181,7 @@ class Dendrogram():
         print('Using {} features'.format(len(featurelist)))
         return create_model(X[featurelist], y, model, metric, n_splits=n_splits)
 
-    def shuffle_and_score_at_point(self, X, y, model, metric, step):
+    def shuffle_and_score_at_point(self, X, y, model, metric, step, n_splits=1):
         '''A helper method for scoring a Dendrogram at a step.
         This method shuffles the graph representatives and then
         runs ``score_at_point``. By running shuffle and score at point
@@ -189,7 +197,7 @@ class Dendrogram():
         '''
 
         self.shuffle_all_representatives()
-        return self.score_at_point(X, y, step, scoring_func)
+        return self.score_at_point(X, y, model, metric, step, n_splits=n_splits)
 
     def find_set_of_size(self, size):
         '''Finds a column set of a certain size in the Dendrogram.
