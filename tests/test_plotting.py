@@ -96,10 +96,12 @@ def test_make_scatter_source(fm):
 
 def test_piechart(fm):
     hplot.show(hplot.piechart(fm['flights.carrier']))
+    hplot.show(hplot.piechart(fm['flights.carrier'], static=True))
 
 
 def test_histogram(fm):
     hplot.show(hplot.histogram(fm['flights.distance_group']))
+    hplot.show(hplot.histogram(fm['flights.distance_group'], static=True))
 
 
 def test_timeseries(fm):
@@ -108,6 +110,7 @@ def test_timeseries(fm):
     col_1 = fm_with_time['time']
     col_2 = fm_with_time['label']
     hplot.show(hplot.timeseries(col_1, col_2))
+    hplot.show(hplot.timeseries(col_1, col_2, static=True))
 
 
 def test_scatter(fm):
@@ -115,6 +118,7 @@ def test_scatter(fm):
     col_2 = fm['distance']
     agg = fm['flights.carrier']
     hplot.show(hplot.scatter(col_1, col_2, agg))
+    hplot.show(hplot.scatter(col_1, col_2, agg, static=True))
 
 
 def test_feature_importances_plot(Xy):
@@ -130,3 +134,10 @@ def test_roc_auc(Xy):
 def test_f1(Xy):
     X, y = Xy
     hplot.show(hplot.f1(X, y, RandomForestClassifier()))
+
+
+def test_modify_plot(fm):
+    hplot.show(hplot.histogram(fm['flights.distance_group']),
+               width=300, height=300, title='Distance Histogram',
+               x_axis='axis x', y_axis='axis y',
+               x_range=(0, 1000), y_range=(0, 1000))
