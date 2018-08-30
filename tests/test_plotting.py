@@ -6,14 +6,23 @@ import pandas as pd
 import pytest
 
 import henchman.plotting as hplot
-import henchman.learning as learning
+from henchman.learning import create_model
+
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
 
 
 @pytest.fixture
 def fm():
     fm = pd.read_csv('./tests/sample_data/sample_fm.csv')
     return fm
+
+
+@pytest.fixture
+def Xy():
+    X = pd.read_csv('./tests/sample_data/sample_fm_enc.csv')
+    y = X.pop('label')
+    return X, y
 
 
 def test_show_template(capsys):
@@ -79,6 +88,45 @@ def test_make_scatter_source(fm):
     col_2 = fm['distance']
     agg = fm['flights.carrier']
     scatter_df = hplot._make_scatter_source(col_1, col_2, agg, label=fm['label'], aggregate='last')
+
     true_last_distance = [1258., 954., 200., 1535., 2556., 236., 612., 867., 2288., 967.]
     for i, value in enumerate(true_last_distance):
         assert scatter_df['col_2'].values[i] == value
+
+
+def test_piechart(fm):
+    hplot.show(hplot.piechart(fm['flights.carrier']))
+
+
+def test_histogram(fm):
+    hplot.show(hplot.histogram(fm['flights.distance_group']))
+
+
+def test_timeseries(fm):
+    fm_with_time = fm.reset_index()
+    fm_with_time['time'] = pd.to_datetime(fm_with_time['time'])
+    col_1 = fm_with_time['time']
+    col_2 = fm_with_time['label']
+    hplot.show(hplot.timeseries(col_1, col_2))
+
+
+def test_scatter(fm):
+    col_1 = fm['scheduled_elapsed_time']
+    col_2 = fm['distance']
+    agg = fm['flights.carrier']
+    hplot.show(hplot.scatter(col_1, col_2, agg))
+
+
+def test_feature_importances_plot(Xy):
+    X, y = Xy
+    scores, fit_model = create_model(X, y, RandomForestClassifier(), roc_auc_score)
+
+
+def test_roc_auc(Xy):
+    X, y = Xy
+    hplot.show(hplot.roc_auc(X, y, RandomForestClassifier(), n_splits=3))
+
+
+def test_f1(Xy):
+    X, y = Xy
+    hplot.show(hplot.f1(X, y, RandomForestClassifier()))

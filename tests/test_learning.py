@@ -40,7 +40,7 @@ def test_create_model(Xy):
     assert len(score2) == 3
 
 
-def test_return_Xy_shape(Xy):
+def test_return_df_shape(Xy):
     X, y = Xy
     out1 = learning.create_model(X.iloc[:, :3], y, RandomForestClassifier(),
                                  f1_score, _return_df=True)
