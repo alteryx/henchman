@@ -428,7 +428,7 @@ def roc_auc(X, y, model, pos_label=1, prob_col=1, n_splits=1, figargs=None):
     if figargs is None:
         return lambda figargs: roc_auc(X, y, model, pos_label,
                                        prob_col, n_splits, figargs=figargs)
-    scores, model, df_list = create_model(
+    (scores, model), df_list = create_model(
         X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
 
     probs = model.predict_proba(df_list[1])
@@ -582,7 +582,7 @@ def f1(X, y, model, n_precs=1000, n_splits=1, figargs=None):
         return lambda figargs: f1(X, y, model, n_precs,
                                   n_splits, figargs=figargs)
 
-    scores, model, df_list = create_model(
+    (scores, model), df_list = create_model(
         X, y, model, roc_auc_score, _return_df=True, n_splits=n_splits)
     probs = model.predict_proba(df_list[1])
     threshes = [x/float(n_precs) for x in range(0, n_precs)]
@@ -784,7 +784,7 @@ def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
                         'right': edges[1:]})
     if y is not None:
         label_hist = np.nan_to_num(cols['label'].groupby(
-            pd.cut(col, edges, right=False)).sum().values, 0)
+            pd.cut(col, edges, right=False)).sum().values)
         if normalized:
             label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
 
