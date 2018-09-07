@@ -896,6 +896,7 @@ def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
             hover.tooltips += [('agg', ' @agg')]
 
         tools += [hover]
+    radius = (col_1.max() - col_1.min()) / 100.
     plot = figure(tools=tools)
     if figargs['colors'] is not None:
         scatter_color = figargs['colors'][0]
@@ -904,6 +905,7 @@ def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
     plot.scatter(x='col_1',
                  y='col_2',
                  color=scatter_color,
+                 radius=radius,
                  source=source,
                  alpha=.8)
 
