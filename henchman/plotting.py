@@ -262,7 +262,7 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
 
 
 def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
-               aggregate='mean', hover=True, static=False, figargs=None):
+               aggregate='mean', figargs=None):
     '''Creates a time based aggregations of a numeric variable.
     This function allows for the user to mean, count, sum or find the min
     or max of a second variable with regards to a timeseries.
@@ -275,8 +275,6 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         n_bins (int): The number of time bins to make.
         aggregate (str): What aggregation to do on the numeric column. Options are
             'mean', 'sum', 'count', 'max' and 'min'. Default is 'mean'.
-        hover (bool): Whether or not to show the hovertool.
-        static (bool): Whether or not to make a dyanmic plot. Default is False.
 
     Example:
         If the dataframe ``X`` has a columns named ``amount`` and ``date``.
@@ -287,24 +285,23 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
 
         For a static plot:
 
-        >>> plot2 = hplot.timeseries(X['date'], X['amount'], n_bins=50, static=True)
-        >>> hplot.show(plot2)
+        >>> plot2 = hplot.timeseries(X['date'], X['amount'], n_bins=50)
+        >>> hplot.show(plot2, static=True)
     '''
     if figargs is None:
         return lambda figargs: timeseries(col_1, col_2, col_max, col_min,
-                                          n_bins, aggregate, hover, static, figargs=figargs)
+                                          n_bins, aggregate, figargs=figargs)
 
     source = ColumnDataSource(_make_timeseries_source(col_1, col_2, col_max,
                                                       col_min, n_bins, aggregate))
-    plot = _make_timeseries_plot(hover, source)
+    plot = _make_timeseries_plot(source, figargs)
     plot = _modify_plot(plot, figargs)
 
-    if static:
+    if figargs['static']:
         return plot
 
-    def modify_doc(doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs):
+    def modify_doc(doc, col_1, col_2, col_max, col_min, n_bins, aggregate, figargs):
         def callback(attr, old, new):
-
             try:
                 source.data = ColumnDataSource(
                     _make_timeseries_source(col_1, col_2,
@@ -321,11 +318,11 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         doc.add_root(column(slider, range_select, dropdown, plot))
 
     return lambda doc: modify_doc(
-        doc, col_1, col_2, col_max, col_min, n_bins, aggregate, hover, figargs)
+        doc, col_1, col_2, col_max, col_min, n_bins, aggregate, figargs)
 
 
 def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
-            hover=False, static=False, figargs=None):
+            figargs=None):
     '''Creates a scatter plot of two variables.
     This function allows for the display of two variables with
     an optional argument to groupby. In its dynamic form, this
@@ -339,8 +336,6 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
         label (pd.Series, optional): A numeric label to be used in the hovertool.
         agg (pd.Series, optional): A categorical variable to aggregate by.
         aggregate (str): The aggregation to use. Options are 'mean', 'last', 'sum', 'max' and 'min'.
-        hover (bool): Whether or not to show the hovertool.
-        static (bool): Whether or not to make a dyanmic plot. Default is False.
 
     Example:
         If the dataframe ``X`` has a columns named ``amount`` and ``quantity``.
@@ -358,9 +353,10 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
         return lambda figargs: scatter(
             col_1, col_2, agg, label, aggregate, hover, static, figargs=figargs)
     source = ColumnDataSource(_make_scatter_source(col_1, col_2, agg, label, aggregate))
-    plot = _make_scatter_plot(col_1, col_2, label, agg, hover, source)
+    plot = _make_scatter_plot(col_1, col_2, label, agg, source, figargs)
     plot = _modify_plot(plot, figargs)
-    if static:
+
+    if figargs['static']:
         return plot
 
     def modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs):
@@ -730,9 +726,9 @@ def _make_timeseries_source(col_1, col_2, col_max=None, col_min=None, n_bins=10,
     return tmp
 
 
-def _make_timeseries_plot(hover, source):
+def _make_timeseries_plot(source, figargs):
     tools = ['box_zoom', 'save', 'reset']
-    if hover:
+    if figargs['hover']:
         hover = HoverTool(
             tooltips=[
                 ("Height", " @height"),
@@ -745,9 +741,17 @@ def _make_timeseries_plot(hover, source):
             mode='mouse')
         tools += [hover]
     plot = figure(tools=tools, x_axis_type='datetime')
+    if figargs['color'] is None:
+        plot_color = '#1F77B4'
+        line_color = 'white'
+    else:
+        assert len(figargs['colors']) >= 2
+        plot_color = figargs['colors'][0]
+        line_color = figargs['colors'][1]
+
     plot.quad(top='height', bottom=0,
-              left='left', right='right',
-              line_color='white', source=source, fill_alpha=.5)
+              left='left', right='right', color=plot_color,
+              line_color=line_color, source=source, fill_alpha=.5)
     return plot
 
 
@@ -824,21 +828,25 @@ def _make_histogram_plot(y, source, figargs):
                 ],
                 mode='mouse')
         tools += [hover]
-    if figargs['color'] is None:
-        color = ['#1F77B4', 'purple', 'white']
+    if figargs['colors'] is None:
+        plot_1_color = '#1F77B4'
+        plot_2_color = 'purple'
+        line_color = 'white'
     else:
-        color = figargs['color']
-        assert len(color) >= 3
+        assert len(figargs['colors']) >= 3
+        plot_1_color = figargs['colors'][0]
+        plot_2_color = figargs['colors'][1]
+        line_color = figargs['colors'][2]
 
     plot = figure(tools=tools)
     plot.quad(top='hist', bottom=0, left='left',
-              right='right', color=color[0], line_color=color[2],
+              right='right', color=plot_1_color, line_color=line_color,
               source=source, fill_alpha=.5)
 
     if y is not None:
         plot.quad(top='label', bottom=0, left='left',
-                  right='right', color=color[1],
-                  line_color=color[2], source=source, fill_alpha=.5)
+                  right='right', color=plot_2_color,
+                  line_color=line_color, source=source, fill_alpha=.5)
     return plot
 
 
@@ -874,9 +882,9 @@ def _make_scatter_source(col_1, col_2, agg=None, label=None, aggregate='last'):
     return tmp
 
 
-def _make_scatter_plot(col_1, col_2, label, agg, hover, source):
+def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
     tools = ['box_zoom', 'save', 'reset']
-    if hover:
+    if figargs['hover']:
         hover = HoverTool(tooltips=[
             (col_1.name, ' @col_1'),
             (col_2.name, ' @col_2'),
@@ -889,8 +897,14 @@ def _make_scatter_plot(col_1, col_2, label, agg, hover, source):
 
         tools += [hover]
     plot = figure(tools=tools)
+    if figargs['colors'] is not None:
+        scatter_color = figargs['colors'][0]
+    else:
+        scatter_color = '#1F77B4'
+
     plot.scatter(x='col_1',
                  y='col_2',
+                 color=scatter_color,
                  source=source,
                  alpha=.8)
 
