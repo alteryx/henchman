@@ -351,7 +351,7 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
     '''
     if figargs is None:
         return lambda figargs: scatter(
-            col_1, col_2, agg, label, aggregate, hover, static, figargs=figargs)
+            col_1, col_2, agg, label, aggregate, figargs=figargs)
     source = ColumnDataSource(_make_scatter_source(col_1, col_2, agg, label, aggregate))
     plot = _make_scatter_plot(col_1, col_2, label, agg, source, figargs)
     plot = _modify_plot(plot, figargs)
@@ -652,7 +652,7 @@ def _make_piechart_source(col, mergepast=None, sort=True, drop_n=None, figargs=N
                                        'ends': end})])
     if figargs['colors'] is None:
         figargs['colors'] = Category20[20]
-    tmp['colors'] = [figargs['colors'][i % len(figargs['colors'] - 1)]
+    tmp['colors'] = [figargs['colors'][i % (len(figargs['colors'])-1)]
                      for i, _ in enumerate(tmp['names'])]
 
     return tmp
@@ -741,7 +741,7 @@ def _make_timeseries_plot(source, figargs):
             mode='mouse')
         tools += [hover]
     plot = figure(tools=tools, x_axis_type='datetime')
-    if figargs['color'] is None:
+    if figargs['colors'] is None:
         plot_color = '#1F77B4'
         line_color = 'white'
     else:
@@ -901,7 +901,6 @@ def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
         scatter_color = figargs['colors'][0]
     else:
         scatter_color = '#1F77B4'
-
     plot.scatter(x='col_1',
                  y='col_2',
                  color=scatter_color,
