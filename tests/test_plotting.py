@@ -29,10 +29,17 @@ def test_show_template(capsys):
     hplot.show_template()
     output_str, _ = capsys.readouterr()
     output = output_str.split('\n')
-    trueoutput = ['show(plot,', '     png=False,',
-                  '     width=None,', '     height=None,',
-                  "     title='Temporary title',", "     x_axis='my xaxis name',",
-                  "     y_axis='my yaxis name',", '     x_range=(0, 10) or None,',
+    trueoutput = ['show(plot,',
+                  '     static=False,',
+                  '     png=False,',
+                  '     hover=False,',
+                  '     colors=None,',
+                  '     width=None,',
+                  '     height=None,',
+                  "     title='Temporary title',",
+                  "     x_axis='my xaxis name',",
+                  "     y_axis='my yaxis name',",
+                  '     x_range=(0, 10) or None,',
                   '     y_range=(0, 10) or None)', '', '']
 
     for i, value in enumerate(trueoutput):
@@ -40,7 +47,8 @@ def test_show_template(capsys):
 
 
 def test_make_piechart_source(fm):
-    pie_df = hplot._make_piechart_source(fm['flights.carrier'], mergepast=2, sort=False, drop_n=1)
+    pie_df = hplot._make_piechart_source(fm['flights.carrier'], mergepast=2, sort=False, drop_n=1,
+                                         figargs={'colors': None})
     names = pie_df['names'].values
     truevalues = ['AS', 'B6', 'Other']
 
@@ -96,12 +104,12 @@ def test_make_scatter_source(fm):
 
 def test_piechart(fm):
     hplot.show(hplot.piechart(fm['flights.carrier']))
-    hplot.show(hplot.piechart(fm['flights.carrier'], static=True))
+    hplot.show(hplot.piechart(fm['flights.carrier']), static=True)
 
 
 def test_histogram(fm):
     hplot.show(hplot.histogram(fm['flights.distance_group']))
-    hplot.show(hplot.histogram(fm['flights.distance_group'], static=True))
+    hplot.show(hplot.histogram(fm['flights.distance_group']), static=True)
 
 
 def test_timeseries(fm):
@@ -110,7 +118,7 @@ def test_timeseries(fm):
     col_1 = fm_with_time['time']
     col_2 = fm_with_time['label']
     hplot.show(hplot.timeseries(col_1, col_2))
-    hplot.show(hplot.timeseries(col_1, col_2, static=True))
+    hplot.show(hplot.timeseries(col_1, col_2), static=True)
 
 
 def test_scatter(fm):
@@ -118,7 +126,7 @@ def test_scatter(fm):
     col_2 = fm['distance']
     agg = fm['flights.carrier']
     hplot.show(hplot.scatter(col_1, col_2, agg))
-    hplot.show(hplot.scatter(col_1, col_2, agg, static=True))
+    hplot.show(hplot.scatter(col_1, col_2, agg), static=True)
 
 
 def test_feature_importances_plot(Xy):
@@ -141,3 +149,16 @@ def test_modify_plot(fm):
                width=300, height=300, title='Distance Histogram',
                x_axis='axis x', y_axis='axis y',
                x_range=(0, 1000), y_range=(0, 1000))
+
+
+def test_color(fm):
+    colors = ['white', '#000000', 'green']
+    hplot.show(hplot.histogram(fm['flights.distance_group']), colors=colors)
+    hplot.show(hplot.piechart(fm['flights.dest']), colors=colors)
+    hplot.show(hplot.scatter(fm['distance'], fm['distance']), colors=colors)
+
+    fm_with_time = fm.reset_index()
+    fm_with_time['time'] = pd.to_datetime(fm_with_time['time'])
+    col_1 = fm_with_time['time']
+    col_2 = fm_with_time['label']
+    hplot.show(hplot.timeseries(col_1, col_2), colors=colors)
