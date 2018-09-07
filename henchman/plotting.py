@@ -778,6 +778,8 @@ def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
         col_min = col.min()
     truncated = col[(col <= col_max) & (col >= col_min)]
     hist, edges = np.histogram(truncated, bins=n_bins, density=normalized)
+    if normalized:
+        hist = [height * (edges[1] - edges[0]) for height in hist]
     cols = pd.DataFrame({'col': col, 'label': y})
     tmp = pd.DataFrame({'hist': hist,
                         'left': edges[:-1],
