@@ -1,4 +1,4 @@
-* Notebook Utilities version:
+* Henchman version:
 * Python version:
 * Operating System:
 
