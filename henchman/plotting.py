@@ -51,7 +51,10 @@ def show_template():
         >>> hplot.show_template()
     '''
     print('show(plot,\n'
+          '     static=False,\n'
           '     png=False,\n'
+          '     hover=False,\n'
+          '     colors=None,\n'
           '     width=None,\n'
           '     height=None,\n'
           '     title=\'Temporary title\',\n'
@@ -93,10 +96,10 @@ def _modify_plot(plot, figargs):
     return plot
 
 
-def show(plot, png=False,
+def show(plot, png=False, static=False, hover=True,
          width=None, height=None,
          title=None, x_axis=None, y_axis=None,
-         x_range=None, y_range=None):
+         x_range=None, y_range=None, colors=None):
     '''Format and show a bokeh plot.
     This is a wrapper around bokeh show which can add common
     plot attributes like height, axis labels and whether or not
@@ -106,8 +109,10 @@ def show(plot, png=False,
     You can get a full list of options by function with ``show_template()``.
 
     Args:
-        plot (bokeh.figure or doc): The plot to show.
+        plot (function): The plot to show.
+        static (bool): If True, return a static bokeh plot.
         png (bool): If True, return a png of the plot. Default is False
+        hover (bool): If True, show the hovertool. Default is True.
         width (int, optional): Plot width.
         height (int, optional): Plot height.
         title (str, optional): The title for the plot.
@@ -115,35 +120,43 @@ def show(plot, png=False,
         y_axis (str, optional): The y_axis label.
         x_range (tuple[int, int], optional): A min and max x value to plot.
         y_range (tuple[int, int], optional): A min and max y value to plot.
+        colors (list[str], optional): A list of colors to use for the plot.
 
     Example:
         >>> import henchman.plotting as hplot
         >>> hplot.show_template()
         show(plot,
+             static=False,
              png=False,
+             hover=True,
              width=None,
              height=None,
              title='Temporary title',
              x_axis='my xaxis name',
              y_axis='my yaxis name',
              x_range=(0, 10) or None,
-             y_range=(0, 10) or None)
+             y_range=(0, 10) or None,
+             colors=None)
 
         >>> hplot.show(plot, width=500, title='My Plot Title')
+        >>> hplot.show(plot, png=True, static=True)
     '''
     output_notebook(hide_banner=True)
-    figargs = {'width': width, 'height': height,
+    figargs = {'static': static, 'png': png, 'hover': hover,
+               'width': width, 'height': height,
                'title': title, 'x_axis': x_axis, 'y_axis': y_axis,
-               'x_range': x_range, 'y_range': y_range}
+               'x_range': x_range, 'y_range': y_range,
+               'colors': colors}
     figure = plot(figargs=figargs)
 
     if png:
-        return get_screenshot_as_png(figure, driver=None)
+        figargs['static'] = True
+        return get_screenshot_as_png(plot(figargs=figargs), driver=None)
 
     return io.show(figure)
 
 
-def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=False, figargs=None):
+def piechart(col, sort=True, mergepast=None, drop_n=None, figargs=None):
     '''Creates a piechart.
     Finds all of the unique values in a column and makes a piechart
     out of them. By default, this will make a dynamic piechart with
@@ -154,8 +167,6 @@ def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=Fal
         sort (bool): Whether or not to sort by frequency for static plot. Default is True.
         mergepast (int): Merge infrequent column values for static plot. Default is 10.
         drop_n (int): How many high frequency values to drop for static plot. Default is None.
-        hover (bool): Whether or not to include a hovertool. Default is True.
-        static (bool): Whether to return a static piechart. Default is False.
 
     Example:
         If the dataframe ``X`` has a column named ``car_color``:
@@ -167,20 +178,20 @@ def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=Fal
         For a static plot:
 
         >>> import henchman.plotting as hplot
-        >>> plot = hplot.piechart(X['car_color'], sort=False, static=True)
-        >>> hplot.show(plot)
+        >>> plot = hplot.piechart(X['car_color'], sort=False)
+        >>> hplot.show(plot, static=True)
     '''
     if figargs is None:
-        return lambda figargs: piechart(col, sort, mergepast, drop_n, hover, static, figargs)
+        return lambda figargs: piechart(col, sort, mergepast, drop_n, figargs)
 
-    source = ColumnDataSource(_make_piechart_source(col, mergepast, sort, drop_n))
-    plot = _make_piechart_plot(hover, source)
+    source = ColumnDataSource(_make_piechart_source(col, mergepast, sort, drop_n, figargs))
+    plot = _make_piechart_plot(source, figargs)
     plot = _modify_plot(plot, figargs)
 
-    if static:
+    if figargs['static']:
         return plot
 
-    def modify_doc(doc, col, sort, mergepast, drop_n, hover, figargs):
+    def modify_doc(doc, col, sort, mergepast, drop_n, figargs):
         def callback(attr, old, new):
             source.data = ColumnDataSource(
                 _make_piechart_source(col,
@@ -194,11 +205,11 @@ def piechart(col, sort=True, mergepast=None, drop_n=None, hover=True, static=Fal
         doc.add_root(
             column(row(column(merge_slider, drop_slider), sorted_button), plot))
 
-    return lambda doc: modify_doc(doc, col, sort, mergepast, drop_n, hover, figargs)
+    return lambda doc: modify_doc(doc, col, sort, mergepast, drop_n, figargs)
 
 
 def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
-              normalized=False, hover=True, static=False, figargs=None):
+              normalized=False, figargs=None):
     '''Creates a histogram.
     This function takes a single input and creates a histogram from it.
     There is an optional second column input for labels, if you would
@@ -212,8 +223,6 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
         col_max (float): Maximum value to include in histogram.
         col_min (float): Minimum value to include in histogram.
         normalized (bool): Whether or not to normalize the columns. Default is False.
-        hover (bool): Whether or not to create a hovertool. Default is True.
-        static (bool): Whether or not to create a static plot. Default is False.
 
     Example:
         If the dataframe ``X`` has a column named ``amount`` and
@@ -225,19 +234,19 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
 
         If you wanted a single variable histogram instead, omit y:
 
-        >>> plot2 = hplot.histogram(X['amount'], col_max=200, n_bins=20, static=True)
-        >>> hplot.show(plot2)
+        >>> plot2 = hplot.histogram(X['amount'], col_max=200, n_bins=20)
+        >>> hplot.show(plot2, static=True)
     '''
     if figargs is None:
         return lambda figargs: histogram(
             col, y, n_bins, col_max, col_min,
-            normalized, hover, static, figargs=figargs)
+            normalized, figargs=figargs)
 
     source = ColumnDataSource(_make_histogram_source(col, y, n_bins, col_max, col_min, normalized))
-    plot = _make_histogram_plot(y, hover, source)
+    plot = _make_histogram_plot(y, source, figargs)
     plot = _modify_plot(plot, figargs)
 
-    if static:
+    if figargs['static']:
         return plot
 
     def modify_doc(doc, col, y, n_bins, col_max, col_min, normalized, figargs):
@@ -607,7 +616,7 @@ def f1(X, y, model, n_precs=1000, n_splits=1, figargs=None):
 # Piechart Utilities #
 
 
-def _make_piechart_source(col, mergepast=None, sort=True, drop_n=None):
+def _make_piechart_source(col, mergepast=None, sort=True, drop_n=None, figargs=None):
     if mergepast is None:
         mergepast = col.nunique()
     values = col.reset_index().groupby(col.name).count()
@@ -645,15 +654,17 @@ def _make_piechart_source(col, mergepast=None, sort=True, drop_n=None):
                                        'percents': [percent],
                                        'starts': start,
                                        'ends': end})])
-    tmp['colors'] = [Category20[20][i % 20]
+    if figargs['colors'] is None:
+        figargs['colors'] = Category20[20]
+    tmp['colors'] = [figargs['colors'][i % len(figargs['colors'] - 1)]
                      for i, _ in enumerate(tmp['names'])]
 
     return tmp
 
 
-def _make_piechart_plot(hover, source):
+def _make_piechart_plot(source, figargs):
     tools = ['box_zoom', 'save', 'reset']
-    if hover:
+    if figargs['hover']:
         hover = HoverTool(
             tooltips=[
                 ("Name", " @names"),
@@ -794,9 +805,9 @@ def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
     return tmp
 
 
-def _make_histogram_plot(y, hover, source):
+def _make_histogram_plot(y, source, figargs):
     tools = ['box_zoom', 'save', 'reset']
-    if hover:
+    if figargs['hover']:
         if y is not None:
             hover = HoverTool(
                 tooltips=[
@@ -813,16 +824,21 @@ def _make_histogram_plot(y, hover, source):
                 ],
                 mode='mouse')
         tools += [hover]
+    if figargs['color'] is None:
+        color = ['#1F77B4', 'purple', 'white']
+    else:
+        color = figargs['color']
+        assert len(color) >= 3
 
     plot = figure(tools=tools)
     plot.quad(top='hist', bottom=0, left='left',
-              right='right', line_color='white',
+              right='right', color=color[0], line_color=color[2],
               source=source, fill_alpha=.5)
 
     if y is not None:
         plot.quad(top='label', bottom=0, left='left',
-                  right='right', color='purple',
-                  line_color='white', source=source, fill_alpha=.5)
+                  right='right', color=color[1],
+                  line_color=color[2], source=source, fill_alpha=.5)
     return plot
 
 
