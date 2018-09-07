@@ -193,11 +193,15 @@ def piechart(col, sort=True, mergepast=None, drop_n=None, figargs=None):
 
     def modify_doc(doc, col, sort, mergepast, drop_n, figargs):
         def callback(attr, old, new):
-            source.data = ColumnDataSource(
-                _make_piechart_source(col,
-                                      sort=sorted_button.active,
-                                      mergepast=merge_slider.value,
-                                      drop_n=drop_slider.value)).data
+            try:
+                source.data = ColumnDataSource(
+                    _make_piechart_source(col,
+                                          sort=sorted_button.active,
+                                          mergepast=merge_slider.value,
+                                          drop_n=drop_slider.value,
+                                          figargs=figargs)).data
+            except Exception as e:
+                print(e)
 
         sorted_button, merge_slider, drop_slider = _piechart_widgets(
             col, sort, mergepast, drop_n, callback)
@@ -251,9 +255,12 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
 
     def modify_doc(doc, col, y, n_bins, col_max, col_min, normalized, figargs):
         def callback(attr, old, new):
-            source.data = ColumnDataSource(_make_histogram_source(
-                col, y, n_bins=slider.value, col_max=range_select.value[1],
-                col_min=range_select.value[0], normalized=normalized)).data
+            try:
+                source.data = ColumnDataSource(_make_histogram_source(
+                    col, y, n_bins=slider.value, col_max=range_select.value[1],
+                    col_min=range_select.value[0], normalized=normalized)).data
+            except Exception as e:
+                print(e)
 
         slider, range_select = _histogram_widgets(col, y, n_bins, col_max, col_min, callback)
 
@@ -361,9 +368,13 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
 
     def modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs):
         def callback(attr, old, new):
-            source.data = ColumnDataSource(
-                _make_scatter_source(col_1, col_2, agg, label, aggregate=dropdown.value)).data
-            dropdown.label = dropdown.value
+            try:
+                source.data = ColumnDataSource(
+                    _make_scatter_source(col_1, col_2, agg, label, aggregate=dropdown.value)).data
+                dropdown.label = dropdown.value
+            except Exception as e:
+                print(e)
+
         dropdown = _scatter_widgets(col_1, col_2, aggregate, callback)
         if agg is not None:
             doc.add_root(column(dropdown, plot))
@@ -544,14 +555,17 @@ def dendrogram(D, figargs=None):
                                height=50, width=400)
 
         def callback(attr, old, new):
-            edges = D.edges[slider.value]
-            edges_source.data = ColumnDataSource(
-                pd.DataFrame(edges).rename(columns={1: 'end',
-                                                    0: 'start'})).data
-            step_source.data = ColumnDataSource(
-                {'step': [slider.value],
-                 'thresh': [D.threshlist[slider.value]],
-                 'components': [len(D.graphs[slider.value])]}).data
+            try:
+                edges = D.edges[slider.value]
+                edges_source.data = ColumnDataSource(
+                    pd.DataFrame(edges).rename(columns={1: 'end',
+                                                        0: 'start'})).data
+                step_source.data = ColumnDataSource(
+                    {'step': [slider.value],
+                     'thresh': [D.threshlist[slider.value]],
+                     'components': [len(D.graphs[slider.value])]}).data
+            except Exception as e:
+                print(e)
 
         slider = Slider(start=0,
                         end=len(D.edges),

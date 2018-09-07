@@ -149,3 +149,16 @@ def test_modify_plot(fm):
                width=300, height=300, title='Distance Histogram',
                x_axis='axis x', y_axis='axis y',
                x_range=(0, 1000), y_range=(0, 1000))
+
+
+def test_color(fm):
+    colors = ['white', '#000000', 'green']
+    hplot.show(hplot.histogram(fm['flights.distance_group']), colors=colors)
+    hplot.show(hplot.piechart(fm['flights.dest']), colors=colors)
+    hplot.show(hplot.scatter(fm['distance'], fm['distance']), colors=colors)
+
+    fm_with_time = fm.reset_index()
+    fm_with_time['time'] = pd.to_datetime(fm_with_time['time'])
+    col_1 = fm_with_time['time']
+    col_2 = fm_with_time['label']
+    hplot.show(hplot.timeseries(col_1, col_2), colors=colors)
