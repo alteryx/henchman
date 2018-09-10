@@ -24,6 +24,8 @@ from bokeh.models.widgets import DataTable, TableColumn, Dropdown
 from bokeh.models.graphs import from_networkx, NodesAndLinkedEdges
 
 from bokeh.layouts import column, row
+import bokeh.layouts as layouts
+
 from bokeh.plotting import figure
 
 from bokeh.io import output_notebook
@@ -99,7 +101,8 @@ def _modify_plot(plot, figargs):
 def show(plot, png=False, static=False, hover=True,
          width=None, height=None,
          title=None, x_axis=None, y_axis=None,
-         x_range=None, y_range=None, colors=None):
+         x_range=None, y_range=None, colors=None,
+         fig=False):
     '''Format and show a bokeh plot.
     This is a wrapper around bokeh show which can add common
     plot attributes like height, axis labels and whether or not
@@ -110,8 +113,7 @@ def show(plot, png=False, static=False, hover=True,
 
     Args:
         plot (function): The plot to show.
-        static (bool): If True, return a static bokeh plot.
-        png (bool): If True, return a png of the plot. Default is False
+        static (bool): If True, show a static bokeh plot.
         hover (bool): If True, show the hovertool. Default is True.
         width (int, optional): Plot width.
         height (int, optional): Plot height.
@@ -121,6 +123,9 @@ def show(plot, png=False, static=False, hover=True,
         x_range (tuple[int, int], optional): A min and max x value to plot.
         y_range (tuple[int, int], optional): A min and max y value to plot.
         colors (list[str], optional): A list of colors to use for the plot.
+        png (bool): If True, return a png of the plot. Default is False
+        fig (bool, advanced): If True, return a bokeh figure instead of
+            showing the plot. Only use if you want to manipulate the bokeh figure directly.
 
     Example:
         >>> import henchman.plotting as hplot
@@ -149,11 +154,38 @@ def show(plot, png=False, static=False, hover=True,
                'colors': colors}
     figure = plot(figargs=figargs)
 
+    if fig:
+        return figure
+
     if png:
         figargs['static'] = True
         return get_screenshot_as_png(plot(figargs=figargs), driver=None)
 
     return io.show(figure)
+
+
+def gridplot(plots, n_cols=1):
+    '''Create a gridplot.
+    This is a wrapper around bokeh gridplot meant to easily work with
+    henchman plots. Note that the figures must be ``static`` for this to work.
+    This function call is a work in progress and will likely be depreciated in
+    favor of something stable.
+
+    Args:
+        plots (list[bokeh.figure]): The plots to show. Either a list or a list of lists.
+        n_cols (int): The number of columns. This will be ignored if a list of lists is passed in.
+
+    Example:
+        >>> import henchman.plotting as hplot
+
+        >>> p1 = hplot.show(plot, static=True, fig=True)
+        >>> p2 = hplot.show(plot, static=True, fig=True)
+        >>> hplot.gridplot([p1, p2], n_cols=2)
+    '''
+    output_notebook(hide_banner=True)
+    if isinstance(plots[0], list):
+        return io.show(layouts.gridplot(plots))
+    return io.show(layouts.gridplot(plots, ncols=n_cols))
 
 
 def piechart(col, sort=True, mergepast=None, drop_n=None, figargs=None):
@@ -239,7 +271,7 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
         If you wanted a single variable histogram instead, omit y:
 
         >>> plot2 = hplot.histogram(X['amount'], col_max=200, n_bins=20)
-        >>> hplot.show(plot2, static=True)
+        >>> hplot.show(plot2)
     '''
     if figargs is None:
         return lambda figargs: histogram(
@@ -290,7 +322,7 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         >>> plot = hplot.timeseries(X['date'], X['amount'])
         >>> hplot.show(plot)
 
-        For a static plot:
+        For a bokeh plot without sliders:
 
         >>> plot2 = hplot.timeseries(X['date'], X['amount'], n_bins=50)
         >>> hplot.show(plot2, static=True)
@@ -328,11 +360,11 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         doc, col_1, col_2, col_max, col_min, n_bins, aggregate, figargs)
 
 
-def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
+def scatter(col_1, col_2, cat=None, label=None, aggregate='last',
             figargs=None):
     '''Creates a scatter plot of two variables.
     This function allows for the display of two variables with
-    an optional argument to groupby. In its dynamic form, this
+    an optional argument to groupby. By default, this
     allows for the user to see what two variable looks like as
     grouped by another. A standard example would be to look at
     the "last" row for a column that's changing over time.
@@ -340,8 +372,8 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
     Args:
         col_1 (pd.Series): The x-values of the plotted points.
         col_2 (pd.Series): The y-values of the plotted points.
+        cat (pd.Series, optional): A categorical variable to aggregate by.
         label (pd.Series, optional): A numeric label to be used in the hovertool.
-        agg (pd.Series, optional): A categorical variable to aggregate by.
         aggregate (str): The aggregation to use. Options are 'mean', 'last', 'sum', 'max' and 'min'.
 
     Example:
@@ -353,34 +385,34 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
 
         If you would like to see the amount, quantity pair as aggregated by the ``month`` column:
 
-        >>> plot2 = hplot.scatter(X['date'], X['amount'], agg=X['month'], aggregate='mean')
+        >>> plot2 = hplot.scatter(X['date'], X['amount'], cat=X['month'], aggregate='mean')
         >>> hplot.show(plot2)
     '''
     if figargs is None:
         return lambda figargs: scatter(
-            col_1, col_2, agg, label, aggregate, figargs=figargs)
-    source = ColumnDataSource(_make_scatter_source(col_1, col_2, agg, label, aggregate))
-    plot = _make_scatter_plot(col_1, col_2, label, agg, source, figargs)
+            col_1, col_2, cat, label, aggregate, figargs=figargs)
+    source = ColumnDataSource(_make_scatter_source(col_1, col_2, cat, label, aggregate))
+    plot = _make_scatter_plot(col_1, col_2, label, cat, source, figargs)
     plot = _modify_plot(plot, figargs)
 
     if figargs['static']:
         return plot
 
-    def modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs):
+    def modify_doc(doc, col_1, col_2, cat, label, aggregate, figargs):
         def callback(attr, old, new):
             try:
                 source.data = ColumnDataSource(
-                    _make_scatter_source(col_1, col_2, agg, label, aggregate=dropdown.value)).data
+                    _make_scatter_source(col_1, col_2, cat, label, aggregate=dropdown.value)).data
                 dropdown.label = dropdown.value
             except Exception as e:
                 print(e)
 
         dropdown = _scatter_widgets(col_1, col_2, aggregate, callback)
-        if agg is not None:
+        if cat is not None:
             doc.add_root(column(dropdown, plot))
         else:
             doc.add_root(plot)
-    return lambda doc: modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs)
+    return lambda doc: modify_doc(doc, col_1, col_2, cat, label, aggregate, figargs)
 
 
 def feature_importances(X, model, n_feats=5, figargs=None):
@@ -817,7 +849,7 @@ def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
         label_hist = np.nan_to_num(cols['label'].groupby(
             pd.cut(col, edges, right=False)).sum().values)
         if normalized:
-            label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+            label_hist = label_hist / (label_hist.sum())
 
         tmp['label'] = label_hist
     return tmp
@@ -883,20 +915,20 @@ def _histogram_widgets(col, y, n_bins, col_max, col_min, callback):
 
 # Scatter Utilities #
 
-def _make_scatter_source(col_1, col_2, agg=None, label=None, aggregate='last'):
+def _make_scatter_source(col_1, col_2, cat=None, label=None, aggregate='last'):
     tmp = pd.DataFrame({'col_1': col_1, 'col_2': col_2})
 
     if label is not None:
         tmp['label'] = label
 
-    if agg is not None:
-        tmp['agg'] = agg
-        tmp = tmp.groupby('agg').aggregate(aggregate).reset_index()
+    if cat is not None:
+        tmp['cat'] = cat
+        tmp = tmp.groupby('cat').aggregate(aggregate).reset_index()
 
     return tmp
 
 
-def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
+def _make_scatter_plot(col_1, col_2, label, cat, source, figargs):
     tools = ['box_zoom', 'save', 'reset']
     if figargs['hover']:
         hover = HoverTool(tooltips=[
@@ -906,8 +938,8 @@ def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
         if label is not None:
             hover.tooltips += [('label', ' @label')]
 
-        if agg is not None:
-            hover.tooltips += [('agg', ' @agg')]
+        if cat is not None:
+            hover.tooltips += [('cat', ' @cat')]
 
         tools += [hover]
     radius = (col_1.max() - col_1.min()) / 100.

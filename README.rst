@@ -1,6 +1,6 @@
 Welcome to Henchman!
 =====================
-Henchman is a collection of free and `open source
+Henchman is a collection of `open source
 <LICENSE>`_ python
 utility functions for working in a jupyter notebook. With
 Henchman, you can rapidly prototype end-to-end data science
@@ -8,7 +8,7 @@ workflows. You can explore data with
 ``henchman.diagnostics``, make interesting plots with
 ``henchman.plotting``, and do feature selection and machine
 learning with ``henchman.selection`` and 
-``henchman.learning``.
+``henchman.learning``. For more information, visit the henchman `documentation <henchman.featurelabs.com>`_.
 
 Why?
 ~~~~~~~
@@ -20,18 +20,20 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters is as easy as a single function call.
 
-.. image:: docs/_source/img/dynamic_piechart.gif
+.. image:: docs/_source/img/piechart.gif
    :width: 47%
    :height: 300px
-.. image:: docs/_source/img/dynamic_histogram.gif
+.. image:: docs/_source/img/histogram.gif
    :width: 47%
    :height: 300px
 
-- **Memorable API, Extensive documentation**: We have a heavy
-  emphasis on ease of use. That means all the functions are
-  sorted into one of 4 semantically named modules and names
-  should be easy to remember inside that module. On top of
-  that, every function has a docstring, an example and a documentation page.
+- **Memorable API, Extensive documentation**: We have a
+  heavy emphasis on ease of use. That means all the
+  functions are sorted into one of 4 semantically named
+  modules and names should be easy to remember inside that
+  module. On top of that, every function has a docstring, an
+  example and a `documentation <henchman.featurelabs.com>`_
+  page.
 
 .. image:: docs/_source/img/create_model_docs.png
    :width: 75%
@@ -62,7 +64,7 @@ To install Henchman, run this command in your terminal:
 
 .. code-block:: console
 
-    $ python -m pip install ft-henchman
+    $ python -m pip install fl-henchman
 
 This is the preferred method to install Henchman, as it will always install the most recent stable release.
 

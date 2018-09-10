@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `notebook_utilities` package."""
+"""Tests for the diagnostics module."""
 import pandas as pd
 import pytest
 
