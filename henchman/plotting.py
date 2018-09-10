@@ -254,7 +254,7 @@ def histogram(col, y=None, n_bins=10, col_max=None, col_min=None,
         If you wanted a single variable histogram instead, omit y:
 
         >>> plot2 = hplot.histogram(X['amount'], col_max=200, n_bins=20)
-        >>> hplot.show(plot2, static=True)
+        >>> hplot.show(plot2)
     '''
     if figargs is None:
         return lambda figargs: histogram(
@@ -305,7 +305,7 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         >>> plot = hplot.timeseries(X['date'], X['amount'])
         >>> hplot.show(plot)
 
-        For a static plot:
+        For a bokeh plot without sliders:
 
         >>> plot2 = hplot.timeseries(X['date'], X['amount'], n_bins=50)
         >>> hplot.show(plot2, static=True)
@@ -347,7 +347,7 @@ def scatter(col_1, col_2, cat=None, label=None, aggregate='last',
             figargs=None):
     '''Creates a scatter plot of two variables.
     This function allows for the display of two variables with
-    an optional argument to groupby. In its dynamic form, this
+    an optional argument to groupby. By default, this
     allows for the user to see what two variable looks like as
     grouped by another. A standard example would be to look at
     the "last" row for a column that's changing over time.

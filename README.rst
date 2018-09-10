@@ -8,7 +8,7 @@ workflows. You can explore data with
 ``henchman.diagnostics``, make interesting plots with
 ``henchman.plotting``, and do feature selection and machine
 learning with ``henchman.selection`` and 
-``henchman.learning``. For more information, visit `henchman.featurelabs.com`_.
+``henchman.learning``. For more information, visit the henchman `documentation <henchman.featurelabs.com>`_.
 
 Why?
 ~~~~~~~
