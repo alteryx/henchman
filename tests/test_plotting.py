@@ -162,3 +162,10 @@ def test_color(fm):
     col_1 = fm_with_time['time']
     col_2 = fm_with_time['label']
     hplot.show(hplot.timeseries(col_1, col_2), colors=colors)
+
+
+def test_gridplot(fm):
+    p1 = hplot.show(hplot.histogram(fm['flights.distance_group']), fig=True, static=True)
+    p2 = hplot.show(hplot.histogram(fm['flights.distance_group'], n_bins=15), fig=True, static=True)
+    hplot.gridplot([p1, p2], n_cols=2)
+    hplot.gridplot([[p1], [p2]])

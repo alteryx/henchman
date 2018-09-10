@@ -134,7 +134,7 @@ def show(plot, png=False, static=False, hover=True,
              static=False,
              png=False,
              hover=True,
-             width=None,n
+             width=None,
              height=None,
              title='Temporary title',
              x_axis='my xaxis name',
@@ -165,6 +165,23 @@ def show(plot, png=False, static=False, hover=True,
 
 
 def gridplot(plots, n_cols=1):
+    '''Create a gridplot.
+    This is a wrapper around bokeh gridplot meant to easily work with
+    henchman plots. Note that the figures must be ``static`` for this to work.
+    This function call is a work in progress and will likely be depreciated in
+    favor of something stable.
+
+    Args:
+        plots (list[bokeh.figure]): The plots to show. Either a list or a list of lists.
+        n_cols (int): The number of columns. This will be ignored if a list of lists is passed in.
+
+    Example:
+        >>> import henchman.plotting as hplot
+
+        >>> p1 = hplot.show(plot, static=True, fig=True)
+        >>> p2 = hplot.show(plot, static=True, fig=True)
+        >>> hplot.gridplot([p1, p2], n_cols=2)
+    '''
     output_notebook(hide_banner=True)
     if isinstance(plots[0], list):
         return io.show(layouts.gridplot(plots))
