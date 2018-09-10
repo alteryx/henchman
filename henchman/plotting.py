@@ -24,6 +24,8 @@ from bokeh.models.widgets import DataTable, TableColumn, Dropdown
 from bokeh.models.graphs import from_networkx, NodesAndLinkedEdges
 
 from bokeh.layouts import column, row
+import bokeh.layouts as layouts
+
 from bokeh.plotting import figure
 
 from bokeh.io import output_notebook
@@ -99,7 +101,8 @@ def _modify_plot(plot, figargs):
 def show(plot, png=False, static=False, hover=True,
          width=None, height=None,
          title=None, x_axis=None, y_axis=None,
-         x_range=None, y_range=None, colors=None):
+         x_range=None, y_range=None, colors=None,
+         fig=False):
     '''Format and show a bokeh plot.
     This is a wrapper around bokeh show which can add common
     plot attributes like height, axis labels and whether or not
@@ -110,8 +113,7 @@ def show(plot, png=False, static=False, hover=True,
 
     Args:
         plot (function): The plot to show.
-        static (bool): If True, return a static bokeh plot.
-        png (bool): If True, return a png of the plot. Default is False
+        static (bool): If True, show a static bokeh plot.
         hover (bool): If True, show the hovertool. Default is True.
         width (int, optional): Plot width.
         height (int, optional): Plot height.
@@ -121,6 +123,9 @@ def show(plot, png=False, static=False, hover=True,
         x_range (tuple[int, int], optional): A min and max x value to plot.
         y_range (tuple[int, int], optional): A min and max y value to plot.
         colors (list[str], optional): A list of colors to use for the plot.
+        png (bool): If True, return a png of the plot. Default is False
+        fig (bool, advanced): If True, return a bokeh figure instead of
+            showing the plot. Only use if you want to manipulate the bokeh figure directly.
 
     Example:
         >>> import henchman.plotting as hplot
@@ -129,7 +134,7 @@ def show(plot, png=False, static=False, hover=True,
              static=False,
              png=False,
              hover=True,
-             width=None,
+             width=None,n
              height=None,
              title='Temporary title',
              x_axis='my xaxis name',
@@ -149,11 +154,21 @@ def show(plot, png=False, static=False, hover=True,
                'colors': colors}
     figure = plot(figargs=figargs)
 
+    if fig:
+        return figure
+
     if png:
         figargs['static'] = True
         return get_screenshot_as_png(plot(figargs=figargs), driver=None)
 
     return io.show(figure)
+
+
+def gridplot(plots, n_cols=1):
+    output_notebook(hide_banner=True)
+    if isinstance(plots[0], list):
+        return io.show(layouts.gridplot(plots))
+    return io.show(layouts.gridplot(plots, ncols=n_cols))
 
 
 def piechart(col, sort=True, mergepast=None, drop_n=None, figargs=None):
@@ -817,7 +832,7 @@ def _make_histogram_source(col, y, n_bins, col_max, col_min, normalized):
         label_hist = np.nan_to_num(cols['label'].groupby(
             pd.cut(col, edges, right=False)).sum().values)
         if normalized:
-            label_hist = label_hist / (label_hist.sum() * (edges[1] - edges[0]))
+            label_hist = label_hist / (label_hist.sum())
 
         tmp['label'] = label_hist
     return tmp
