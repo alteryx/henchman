@@ -343,7 +343,7 @@ def timeseries(col_1, col_2, col_max=None, col_min=None, n_bins=10,
         doc, col_1, col_2, col_max, col_min, n_bins, aggregate, figargs)
 
 
-def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
+def scatter(col_1, col_2, cat=None, label=None, aggregate='last',
             figargs=None):
     '''Creates a scatter plot of two variables.
     This function allows for the display of two variables with
@@ -355,8 +355,8 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
     Args:
         col_1 (pd.Series): The x-values of the plotted points.
         col_2 (pd.Series): The y-values of the plotted points.
+        cat (pd.Series, optional): A categorical variable to aggregate by.
         label (pd.Series, optional): A numeric label to be used in the hovertool.
-        agg (pd.Series, optional): A categorical variable to aggregate by.
         aggregate (str): The aggregation to use. Options are 'mean', 'last', 'sum', 'max' and 'min'.
 
     Example:
@@ -368,34 +368,34 @@ def scatter(col_1, col_2, agg=None, label=None, aggregate='last',
 
         If you would like to see the amount, quantity pair as aggregated by the ``month`` column:
 
-        >>> plot2 = hplot.scatter(X['date'], X['amount'], agg=X['month'], aggregate='mean')
+        >>> plot2 = hplot.scatter(X['date'], X['amount'], cat=X['month'], aggregate='mean')
         >>> hplot.show(plot2)
     '''
     if figargs is None:
         return lambda figargs: scatter(
-            col_1, col_2, agg, label, aggregate, figargs=figargs)
-    source = ColumnDataSource(_make_scatter_source(col_1, col_2, agg, label, aggregate))
-    plot = _make_scatter_plot(col_1, col_2, label, agg, source, figargs)
+            col_1, col_2, cat, label, aggregate, figargs=figargs)
+    source = ColumnDataSource(_make_scatter_source(col_1, col_2, cat, label, aggregate))
+    plot = _make_scatter_plot(col_1, col_2, label, cat, source, figargs)
     plot = _modify_plot(plot, figargs)
 
     if figargs['static']:
         return plot
 
-    def modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs):
+    def modify_doc(doc, col_1, col_2, cat, label, aggregate, figargs):
         def callback(attr, old, new):
             try:
                 source.data = ColumnDataSource(
-                    _make_scatter_source(col_1, col_2, agg, label, aggregate=dropdown.value)).data
+                    _make_scatter_source(col_1, col_2, cat, label, aggregate=dropdown.value)).data
                 dropdown.label = dropdown.value
             except Exception as e:
                 print(e)
 
         dropdown = _scatter_widgets(col_1, col_2, aggregate, callback)
-        if agg is not None:
+        if cat is not None:
             doc.add_root(column(dropdown, plot))
         else:
             doc.add_root(plot)
-    return lambda doc: modify_doc(doc, col_1, col_2, agg, label, aggregate, figargs)
+    return lambda doc: modify_doc(doc, col_1, col_2, cat, label, aggregate, figargs)
 
 
 def feature_importances(X, model, n_feats=5, figargs=None):
@@ -898,20 +898,20 @@ def _histogram_widgets(col, y, n_bins, col_max, col_min, callback):
 
 # Scatter Utilities #
 
-def _make_scatter_source(col_1, col_2, agg=None, label=None, aggregate='last'):
+def _make_scatter_source(col_1, col_2, cat=None, label=None, aggregate='last'):
     tmp = pd.DataFrame({'col_1': col_1, 'col_2': col_2})
 
     if label is not None:
         tmp['label'] = label
 
-    if agg is not None:
-        tmp['agg'] = agg
-        tmp = tmp.groupby('agg').aggregate(aggregate).reset_index()
+    if cat is not None:
+        tmp['cat'] = cat
+        tmp = tmp.groupby('cat').aggregate(aggregate).reset_index()
 
     return tmp
 
 
-def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
+def _make_scatter_plot(col_1, col_2, label, cat, source, figargs):
     tools = ['box_zoom', 'save', 'reset']
     if figargs['hover']:
         hover = HoverTool(tooltips=[
@@ -921,8 +921,8 @@ def _make_scatter_plot(col_1, col_2, label, agg, source, figargs):
         if label is not None:
             hover.tooltips += [('label', ' @label')]
 
-        if agg is not None:
-            hover.tooltips += [('agg', ' @agg')]
+        if cat is not None:
+            hover.tooltips += [('cat', ' @cat')]
 
         tools += [hover]
     radius = (col_1.max() - col_1.min()) / 100.

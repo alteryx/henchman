@@ -143,7 +143,7 @@ def feature_importances(X, model, n_feats=5):
 
     Args:
         X(pd.DataFrame): The dataframe from which the features are drawn.
-        model(sklearn.ensemble): A model with a feature_importances_ attr.
+        model(sklearn.ensemble): A model with a ``feature_importances_`` attribute.
         n_feats(int): Number of feature importances to return.
 
     Returns:
