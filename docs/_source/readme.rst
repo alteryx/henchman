@@ -1,6 +1,6 @@
 Welcome to Henchman!
 =====================
-Henchman is a collection of free and open source python
+Henchman is a collection of open source python
 utility functions for working in a jupyter notebook. With
 Henchman, you can rapidly prototype end-to-end data science
 workflows. You can explore data with
@@ -19,12 +19,16 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters is as easy as a single function call.
 
-.. image:: img/dynamic_piechart.gif
+.. image:: img/piechart.gif
    :width: 47%
-   :height: 300px
-.. image:: img/dynamic_histogram.gif
+   :height: 400px
+.. image:: img/histogram.gif
    :width: 47%
-   :height: 300px
+   :height: 400px
+
+.. image:: img/timeseries.gif
+   :height: 400px
+   :align: center
 
 - **Memorable API, Extensive documentation**: We have a heavy
   emphasis on ease of use. That means all the functions are
@@ -61,7 +65,7 @@ To install Henchman, run this command in your terminal:
 
 .. code-block:: console
 
-    $ python -m pip install ft-henchman
+    $ python -m pip install fl-henchman
 
 This is the preferred method to install Henchman, as it will always install the most recent stable release.
 

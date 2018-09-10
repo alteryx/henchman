@@ -187,20 +187,19 @@ We can check :func:`feature importances
 
 .. _plotting:
 
-Plotting
-~~~~~~~~
-The plotting module gives a collection of useful
-dataset agnostic plots. There are *static* plots which which
-have tunable controls to give a good exportable, image and
-there are *dynamic* plots which are fun and useful for
-dataset exploration. We recommend importing the whole module
-at once using ``import henchman.plotting as hplot`` for easy
-access to all of the functions. The single exception might
-be :func:`henchman.plotting.show`, which is useful enough that you might consider
-importing it as itself.
+Plotting 
+~~~~~~~~~
+
+The plotting module gives a collection of useful dataset
+agnostic plots. Plots have the ability to be *dynamic* or
+*static*. We recommend importing the whole module at once
+using ``import henchman.plotting as hplot`` for easy access
+to all of the functions. The single exception might be
+:func:`henchman.plotting.show`, which is useful enough that
+you might consider importing it as itself.
 
 The :func:`show <henchman.plotting.show>` function has many parameters which can be hard
-to remember. Because of that, there's a :func:`templating function <henchman.plotting.show_template>` from which you can copy and paste the ones you want.
+to remember. Because of that, there's a :func:`templating function <henchman.plotting.show_template>` from which you can copy and paste the arguments you want.
 
 .. ipython:: python
 
