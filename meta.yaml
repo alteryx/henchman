@@ -1,37 +1,61 @@
 package:
   name: henchman
-  version: "0.0.2"
+  version: "0.0.3"
 
 source:
   path: ../henchman
 
 build:
   number: 0
+  script: make clean && python setup.py install --single-version-externally-managed --record=record.txt
 
 requirements:
   build:
     - python {{ python }}
-    - setuptools
-    - numpy
-    - bokeh
-    - scikit-learn
-    - networkx
-    - pytest-runner
-    - pytest
+    - setuptools >=3.3
+    - ipython >=5.4
+
+    - numpy >=1.13.3
+    - scipy >=1.0.0
+    - scikit-learn >=0.19.1
+    - pandas >=0.20.3
+
+    - bokeh >=0.12.16
+    - networkx >=2.1
+    - tqdm >=4.10.0
 
   run:
     - python
     - setuptools
-    - numpy
-    - bokeh
-    - scikit-learn
-    - networkx
-    - pytest-runner
-    - pytest
+    - ipython >=5.4
+
+    - numpy >=1.13.3
+    - scipy >=1.0.0
+    - scikit-learn >=0.19.1
+    - pandas >=0.20.3
+
+    - bokeh >=0.12.16
+    - networkx >=2.1
+    - tqdm >=4.10.0
 
 test:
   imports:
     - henchman
+
+  requires:
+    - flake8 >=3.5.0
+    - pytest >=3.4.2
+    - pytest-runner >=2.11.1
+    - pytest-cov >=2.5.1
+    - coverage >=4.5.1
+
+  source_files:
+    - henchman/*
+    - tests/*
+    - setup.cfg
+  commands:
+    py.test --cov-report term-missing --cov=henchman && flake8 henchman && flake8 tests
+
 
 about:
   home: https://github.com/featurelabs/henchman
