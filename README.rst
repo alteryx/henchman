@@ -1,9 +1,9 @@
 .. image:: https://badge.fury.io/py/fl-henchman.svg?maxAge=2592000
     :target: https://badge.fury.io/py/fl-henchman
-.. image:: https://anaconda.org/featurelabs/henchman/badges/version.svg?style=rounded
-    :target: https://anaconda.org/featurelabs/henchman
-.. image:: https://anaconda.org/featurelabs/henchman/badges/platforms.svg?style=rounded
-    :target: https://anaconda.org/featurelabs/henchman
+.. image:: https://img.shields.io/conda/v/srothschild/henchman.svg
+    :target: https://anaconda.org/srothschild/henchman
+.. image:: https://img.shields.io/conda/pn/srothschild/henchman.svg 
+    :target: https://anaconda.org/srothschild/henchman
 
 
 Welcome to Henchman!
@@ -16,7 +16,9 @@ workflows. You can explore data with
 ``henchman.diagnostics``, make interesting plots with
 ``henchman.plotting``, and do feature selection and machine
 learning with ``henchman.selection`` and 
-``henchman.learning``. For more information, visit the henchman `documentation <https://henchman.featurelabs.com>`_.
+``henchman.learning``. 
+
+For more information, visit the Henchman `documentation <https://henchman.featurelabs.com>`_.
 
 Why?
 ~~~~~~~
@@ -28,10 +30,10 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters is as easy as a single function call.
 
-.. image:: docs/_source/img/piechart.gif
+.. image:: http://henchman.featurelabs.com/_images/piechart.gif
    :width: 47%
    :height: 300px
-.. image:: docs/_source/img/histogram.gif
+.. image:: http://henchman.featurelabs.com/_images/histogram.gif
    :width: 47%
    :height: 300px
 
@@ -43,7 +45,7 @@ Henchman:
   example and a `documentation <https://henchman.featurelabs.com>`_
   page.
 
-.. image:: docs/_source/img/create_model_docs.png
+.. image:: http://henchman.featurelabs.com/_images/create_model_docs.png
    :width: 75%
    :align: center
 
@@ -54,14 +56,14 @@ Henchman:
   select features in novel ways with ``RandomSelect`` and
   ``Dendrogram`` in `henchman.selection`.
 
-.. image:: docs/_source/img/overview.png
+.. image:: http://henchman.featurelabs.com/_images/overview.png
    :width: 47%
    :height: 300px
-.. image:: docs/_source/img/warnings.png
+.. image:: http://henchman.featurelabs.com/_images/warnings.png
    :width: 47%
    :height: 300px
 
-.. image:: docs/_source/img/dendrogram.gif
+.. image:: http://henchman.featurelabs.com/_images/dendrogram.gif
    :align: center
 
 
