@@ -1,3 +1,11 @@
+.. image:: https://badge.fury.io/py/fl-henchman.svg?maxAge=2592000
+    :target: https://badge.fury.io/py/fl-henchman
+.. image:: https://anaconda.org/featurelabs/henchman/badges/version.svg?style=rounded
+    :target: https://anaconda.org/featurelabs/henchman
+.. image:: https://anaconda.org/featurelabs/henchman/badges/platforms.svg?style=rounded
+    :target: https://anaconda.org/featurelabs/henchman
+
+
 Welcome to Henchman!
 =====================
 Henchman is a collection of `open source
@@ -8,7 +16,7 @@ workflows. You can explore data with
 ``henchman.diagnostics``, make interesting plots with
 ``henchman.plotting``, and do feature selection and machine
 learning with ``henchman.selection`` and 
-``henchman.learning``. For more information, visit the henchman `documentation <henchman.featurelabs.com>`_.
+``henchman.learning``. For more information, visit the henchman `documentation <https://henchman.featurelabs.com>`_.
 
 Why?
 ~~~~~~~
@@ -32,7 +40,7 @@ Henchman:
   functions are sorted into one of 4 semantically named
   modules and names should be easy to remember inside that
   module. On top of that, every function has a docstring, an
-  example and a `documentation <henchman.featurelabs.com>`_
+  example and a `documentation <https://henchman.featurelabs.com>`_
   page.
 
 .. image:: docs/_source/img/create_model_docs.png
@@ -66,9 +74,13 @@ To install Henchman, run this command in your terminal:
 
     $ python -m pip install fl-henchman
 
-This is the preferred method to install Henchman, as it will always install the most recent stable release.
+If you are using conda, you can download the most recent build from our channel on Anaconda.org:
 
-If you don't have `pip`_ installed, this `Python installation guide`_ can guide
+.. code-block:: console
+
+    $ conda install -c featurelabs henchman
+
+These are the preferred methods to install Henchman, as it will always install the most recent stable release. If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
 
 .. _pip: https://pip.pypa.io

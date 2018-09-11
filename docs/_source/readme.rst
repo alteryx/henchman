@@ -67,9 +67,13 @@ To install Henchman, run this command in your terminal:
 
     $ python -m pip install fl-henchman
 
-This is the preferred method to install Henchman, as it will always install the most recent stable release.
+If you are using conda, you can download the most recent build from our channel on Anaconda.org:
 
-If you don't have `pip`_ installed, this `Python installation guide`_ can guide
+.. code-block:: console
+
+    $ conda install -c featurelabs henchman
+
+These are the preferred methods to install Henchman, as it will always install the most recent stable release. If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
 
 .. _pip: https://pip.pypa.io
