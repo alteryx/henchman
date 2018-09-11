@@ -9,17 +9,20 @@ from setuptools.command.build_ext import build_ext as _build_ext
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-requirements = ['pandas>=0.20.3',
-                'bokeh>=0.12.16',
-                'scikit-learn>=0.19.1',
-                'networkx>=2.1',
-                'scipy>=1.0.0',
+requirements = ['ipython>=5.4',
+
                 'numpy>=1.13.3',
-                'ipython>=5.4']
+                'scipy>=1.0.0',
+                'scikit-learn>=0.19.1',
+                'pandas>=0.20.3',
 
-setup_requirements = ['pytest-runner', ]
+                'bokeh>=0.12.16',
+                'networkx>=2.1',
+                'tqdm>=4.10.0', ]
 
-test_requirements = ['pytest', ]
+setup_requirements = []
+
+test_requirements = []
 
 setup(
     author="Feature Labs Team",
