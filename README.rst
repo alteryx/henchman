@@ -1,9 +1,9 @@
 .. image:: https://badge.fury.io/py/fl-henchman.svg?maxAge=2592000
     :target: https://badge.fury.io/py/fl-henchman
-.. image:: https://img.shields.io/conda/v/srothschild/henchman.svg
-    :target: https://anaconda.org/srothschild/henchman
-.. image:: https://img.shields.io/conda/pn/srothschild/henchman.svg 
-    :target: https://anaconda.org/srothschild/henchman
+.. image:: https://img.shields.io/conda/v/featurelabs/henchman.svg
+    :target: https://anaconda.org/featurelabs/henchman
+.. image:: https://img.shields.io/conda/pn/featurelabs/henchman.svg 
+    :target: https://anaconda.org/featurelabs/henchman
 
 
 Welcome to Henchman!
