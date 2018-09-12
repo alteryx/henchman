@@ -34,14 +34,19 @@ def test_randomselect(Xy):
     assert feats.shape[1] == 10
 
 
-def test_dend_fit(Xy):
-    X, y = Xy
-    selector = selection.Dendrogram()
-    selector.fit(X, max_threshes=10)
+def test_dend_fit(fit_dend):
+    selector = fit_dend
     assert selector.adj is not None
     assert selector.columns is not None
     assert selector.edges is not None
     assert selector.graphs is not None
+
+def test_dend_set_params(fit_dend):
+    threshlist = fit_dend.threshlist
+    fit_dend.set_params(threshlist=None)
+
+    assert fit_dend.threshlist == None
+    fit_dend.threshlist = threshlist
 
 def test_dend_features_at_step(fit_dend):
     assert len(fit_dend.features_at_step(48)) == 79
@@ -70,13 +75,15 @@ def test_dend_shuffle_score_at_point(Xy, fit_dend):
     assert set(fit_dend.graphs[1].keys()) != keys_1
     assert len(scores) == 2
 
-def test_dend_transform(Xy, fit_dend):
+def test_dend_transform(Xy, fit_dend, capsys):
     X, y = Xy
-    X_new_1 = fit_dend.transform(X, 83)
-    X_new_2 = fit_dend.transform(X, 78)
+    X_new_1 = fit_dend.transform(X, 99)
+    out1, _ = capsys.readouterr()
+    X_new_2 = fit_dend.transform(X, 50)
+    out2, _ = capsys.readouterr()
     
-    assert X_new_1.shape[1] == 80
-    assert X_new_2.shape[1] == 79
+    assert X_new_1.shape[1] == int(out1[10:12])
+    assert X_new_2.shape[1] == int(out2[-3:-1])
     
     
 
