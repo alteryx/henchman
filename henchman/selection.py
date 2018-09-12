@@ -181,7 +181,7 @@ class Dendrogram():
         print('Using {} features'.format(len(featurelist)))
         return create_model(X[featurelist], y, model, metric, n_splits=n_splits)
 
-    def shuffle_and_score_at_point(self, X, y, model, metric, step, n_splits=1):
+    def shuffle_score_at_point(self, X, y, model, metric, step, n_splits=1):
         '''A helper method for scoring a Dendrogram at a step.
         This method shuffles the graph representatives and then
         runs ``score_at_point``. By running shuffle and score at point
