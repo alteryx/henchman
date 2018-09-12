@@ -7,6 +7,7 @@ import pytest
 
 import henchman.selection as selection
 
+from henchman.plotting import dendrogram, show
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
@@ -84,7 +85,9 @@ def test_dend_transform(Xy, fit_dend, capsys):
     
     assert X_new_1.shape[1] == int(out1[10:12])
     assert X_new_2.shape[1] == int(out2[-3:-1])
-    
+
+def test_dend_plot(fit_dend):
+    show(dendrogram(fit_dend))
     
 
 
