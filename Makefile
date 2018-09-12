@@ -52,6 +52,7 @@ clean-test: ## remove test and coverage artifacts
 
 clean-docs: ## remove built docs
 	rm -fr docs/_build
+	rm -fr docs/_source/.ipynb_checkpoints
 
 glint: ## check style with flake8
 	flake8 henchman tests
