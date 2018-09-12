@@ -13,8 +13,8 @@ We'll load in the csv using pandas.
 
 .. ipython:: python
 
-    sample_df = pd.read_csv('fm.csv', index_col='trip_log_id').iloc[:100,:15]
-    fm_enc = pd.read_csv('fm_enc.csv', index_col='trip_log_id')
+    sample_df = pd.read_csv('../tests/sample_data/sample_fm.csv', index_col='trip_log_id').iloc[:100,:15]
+    fm_enc = pd.read_csv('../tests/sample_data/sample_fm_enc.csv', index_col='trip_log_id')
   
 
 
@@ -99,7 +99,7 @@ which can use pairwise correlation to find a feature set.
 .. ipython:: python
 
     from henchman.selection import RandomSelect
-    X = fm_enc.copy().fillna(0).iloc[:100, :15]
+    X = fm_enc.copy().fillna(0).iloc[:100, :30]
     y = fm_enc.copy().pop('label')[:100]
     sel = RandomSelect(n_feats=12)
     sel.fit(X)
@@ -111,7 +111,6 @@ Alternately, you can use pairwise correlation
     :okwarning:
 
     from henchman.selection import Dendrogram
-    cts = X.pop('time')
     sel2 = Dendrogram(X)
     sel2.transform(X, n_feats=12).head()
 
