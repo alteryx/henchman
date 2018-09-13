@@ -87,14 +87,29 @@ def test_dend_transform(Xy, fit_dend, capsys):
     assert X_new_2.shape[1] == int(out2[-3:-1])
 
 def test_dend_plot(fit_dend):
+    show(dendrogram(fit_dend), static=True)
     show(dendrogram(fit_dend))
+
+def test_build_edges(capsys):
+    fake_sel = selection.Dendrogram()
+    fake_sel.adj = range(501)
+    fake_sel._build_edges(None)
+
+    output, _ = capsys.readouterr()
+    split_output = output.split('\n')
     
+    real_line_1 = 'Calculating more than 500 graphs'
+    real_line_2 = 'You can pass max_threshes as a kwarg to Dendrogram'
+    assert split_output[0] == real_line_1
+    assert split_output[1] == real_line_2
 
+def test_build_graphs_exit():
+    fake_sel = selection.Dendrogram()
+    fake_sel.threshlist = [1, 2]
+    fake_sel.edges = [[(0, 1)], [(1, 2), (0, 1)]] 
+    fake_sel.graphs = [{0: {0, 1}, 2: {2}}, {0: {0, 1, 2}}]
+    fake_sel._build_graphs()
 
-
-
-
-
-    
-
-    
+    assert fake_sel.threshlist == [1]
+    assert fake_sel.edges[0][0][0] == 0
+    assert fake_sel.graphs[0][2] == {2}

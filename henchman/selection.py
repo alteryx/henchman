@@ -111,9 +111,8 @@ class Dendrogram():
         # Make graphs for every thresh
         self._build_graphs()
 
-        #assert len(self.edges) > 0, 'Failed to build edges'
-        #assert len(self.graphs) > 0, 'Failed to build graphs'
-        
+        assert len(self.edges) > 0, 'Failed to build edges'
+        assert len(self.graphs) > 0, 'Failed to build graphs'
 
     def set_params(self, **params):
         '''Method to functionally assign parameters.
@@ -145,7 +144,6 @@ class Dendrogram():
         self.graphs = []
         uniques = list(np.unique(self.adj))
         uniques = [x for x in uniques if not math.isnan(x)]
-        # uniques.reverse()
         if max_threshes is None and len(uniques) > 500:
             print('Calculating more than 500 graphs')
             print('You can pass max_threshes as a kwarg to Dendrogram')

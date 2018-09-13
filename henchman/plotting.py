@@ -570,7 +570,7 @@ def dendrogram(D, figargs=None):
         ResetTool())
 
     plot = _modify_plot(plot, figargs)
-    
+
     if figargs['static']:
         return plot
 
@@ -598,7 +598,7 @@ def dendrogram(D, figargs=None):
                 print(e)
 
         slider = Slider(start=0,
-                        end=len(D.edges),
+                        end=(len(D.edges) - 1),
                         value=0,
                         step=1,
                         title="Step")
