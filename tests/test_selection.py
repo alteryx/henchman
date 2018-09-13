@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `learning` module"""
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -92,7 +93,7 @@ def test_dend_plot(fit_dend):
 
 def test_build_edges(capsys):
     fake_sel = selection.Dendrogram()
-    fake_sel.adj = range(501)
+    fake_sel.adj = np.asarray(range(501))
     fake_sel._build_edges(None)
 
     output, _ = capsys.readouterr()
