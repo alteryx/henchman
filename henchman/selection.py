@@ -111,6 +111,9 @@ class Dendrogram():
         # Make graphs for every thresh
         self._build_graphs()
 
+        assert len(self.edges) > 0, 'Failed to build edges'
+        assert len(self.graphs) > 0, 'Failed to build graphs'
+
     def set_params(self, **params):
         '''Method to functionally assign parameters.
         Expects a dictionary **params as input.
@@ -123,7 +126,7 @@ class Dendrogram():
 
         self.graphs = []
         for edges in tqdm(self.edges):
-            out = find_connected_components(self.columns.keys(), edges)
+            out = find_connected_components(list(self.columns.keys()), edges)
             self.graphs.append(out)
 
     def _build_graphs(self):
@@ -131,9 +134,6 @@ class Dendrogram():
             self._find_all_graphs()
         for i, graph in enumerate(self.graphs):
             if len(graph) == 1:
-                break
-            if len(graph) == len(self.columns) and i > 0:
-                i += -1
                 break
         self.threshlist = self.threshlist[:i]
         self.edges = self.edges[:i]
@@ -143,14 +143,12 @@ class Dendrogram():
         self.edges = []
         self.graphs = []
         uniques = list(np.unique(self.adj))
-        # uniques.reverse()
+        uniques = [x for x in uniques if not math.isnan(x)]
         if max_threshes is None and len(uniques) > 500:
             print('Calculating more than 500 graphs')
             print('You can pass max_threshes as a kwarg to Dendrogram')
         if max_threshes is not None:
             if len(uniques) > max_threshes:
-                # Strip nans
-                uniques = [x for x in uniques if not math.isnan(x)]
                 # Take max_threshes evenly spaced thresholds
                 uniques = uniques[::int(np.floor((len(uniques)/max_threshes)) + 1)]
 
