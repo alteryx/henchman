@@ -512,71 +512,69 @@ def dendrogram(D, figargs=None):
     '''
     if figargs is None:
         return lambda figargs: dendrogram(D, figargs=figargs)
+    G = nx.Graph()
+
+    vertices_source = ColumnDataSource(
+        pd.DataFrame({'index': D.columns.keys(),
+                      'desc': list(D.columns.values())}))
+    edges_source = ColumnDataSource(
+        pd.DataFrame(D.edges[0]).rename(
+            columns={1: 'end', 0: 'start'}))
+    step_source = ColumnDataSource(
+        pd.DataFrame({'step': [0],
+                      'thresh': [D.threshlist[0]],
+                      'components': [len(D.graphs[0])]}))
+
+    G.add_nodes_from([str(x) for x in vertices_source.data['index']])
+    G.add_edges_from(zip(
+        [str(x) for x in edges_source.data['start']],
+        [str(x) for x in edges_source.data['end']]))
+
+    graph_renderer = from_networkx(G, nx.circular_layout,
+                                   scale=1, center=(0, 0))
+
+    graph_renderer.node_renderer.data_source = vertices_source
+    graph_renderer.node_renderer.view = CDSView(source=vertices_source)
+    graph_renderer.edge_renderer.data_source = edges_source
+    graph_renderer.edge_renderer.view = CDSView(source=edges_source)
+
+    plot = Plot(plot_width=400, plot_height=400,
+                x_range=Range1d(-1.1, 1.1),
+                y_range=Range1d(-1.1, 1.1))
+    plot.title.text = "Feature Connectivity"
+    graph_renderer.node_renderer.glyph = Circle(
+        size=5, fill_color=Spectral4[0])
+    graph_renderer.node_renderer.selection_glyph = Circle(
+        size=15, fill_color=Spectral4[2])
+    graph_renderer.edge_renderer.data_source = edges_source
+    graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC",
+                                                   line_alpha=0.6,
+                                                   line_width=.5)
+    graph_renderer.edge_renderer.selection_glyph = MultiLine(
+        line_color=Spectral4[2],
+        line_width=3)
+    graph_renderer.node_renderer.hover_glyph = Circle(
+        size=5,
+        fill_color=Spectral4[1])
+    graph_renderer.selection_policy = NodesAndLinkedEdges()
+    graph_renderer.inspection_policy = NodesAndLinkedEdges()
+
+    plot.renderers.append(graph_renderer)
+
+    plot.add_tools(
+        HoverTool(tooltips=[("feature", "@desc"),
+                            ("index", "@index"), ]),
+        TapTool(),
+        BoxZoomTool(),
+        SaveTool(),
+        ResetTool())
+
+    plot = _modify_plot(plot, figargs)
+    
+    if figargs['static']:
+        return plot
 
     def modify_doc(doc, D, figargs):
-        G = nx.Graph()
-
-        vertices_source = ColumnDataSource(
-            pd.DataFrame({'index': D.columns.keys(),
-                          'desc': D.columns.values()}))
-        edges_source = ColumnDataSource(
-            pd.DataFrame(D.edges[0]).rename(
-                columns={1: 'end', 0: 'start'}))
-        step_source = ColumnDataSource(
-            pd.DataFrame({'step': [0],
-                          'thresh': [D.threshlist[0]],
-                          'components': [len(D.graphs[0])]}))
-
-        G.add_nodes_from(vertices_source.data['index'])
-        G.add_edges_from(zip(
-            edges_source.data['start'],
-            edges_source.data['end']))
-
-        graph_renderer = from_networkx(G, nx.circular_layout,
-                                       scale=1, center=(0, 0))
-
-        graph_renderer.node_renderer.data_source = vertices_source
-        graph_renderer.node_renderer.view = CDSView(source=vertices_source)
-        graph_renderer.edge_renderer.data_source = edges_source
-        graph_renderer.edge_renderer.view = CDSView(source=edges_source)
-
-        plot = Plot(plot_width=400, plot_height=400,
-                    x_range=Range1d(-1.1, 1.1),
-                    y_range=Range1d(-1.1, 1.1))
-        plot.title.text = "Feature Connectivity"
-
-        graph_renderer.node_renderer.glyph = Circle(
-            size=5, fill_color=Spectral4[0])
-        graph_renderer.node_renderer.selection_glyph = Circle(
-            size=15, fill_color=Spectral4[2])
-
-        graph_renderer.edge_renderer.data_source = edges_source
-        graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC",
-                                                       line_alpha=0.6,
-                                                       line_width=.5)
-        graph_renderer.edge_renderer.selection_glyph = MultiLine(
-            line_color=Spectral4[2],
-            line_width=3)
-
-        graph_renderer.node_renderer.hover_glyph = Circle(
-            size=5,
-            fill_color=Spectral4[1])
-
-        graph_renderer.selection_policy = NodesAndLinkedEdges()
-        graph_renderer.inspection_policy = NodesAndLinkedEdges()
-
-        plot.renderers.append(graph_renderer)
-
-        plot.add_tools(
-            HoverTool(tooltips=[("feature", "@desc"),
-                                ("index", "@index"), ]),
-            TapTool(),
-            BoxZoomTool(),
-            SaveTool(),
-            ResetTool())
-
-        plot = _modify_plot(plot, figargs)
-
         data_table = DataTable(source=step_source,
                                columns=[TableColumn(field='step',
                                                     title='Step'),
