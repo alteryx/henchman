@@ -14,6 +14,8 @@ import random
 from tqdm import tqdm
 from collections import defaultdict
 
+from henchman.learning import create_model
+
 
 class RandomSelect:
     def __init__(self, names=None, n_feats=0):
@@ -68,6 +70,24 @@ class Dendrogram():
     """
 
     def __init__(self, X=None, pairing_func=None, max_threshes=None):
+        '''An object to store graphs for a given pairing function.
+        If given a dataframe X this first creates an
+        adjacency matrix given a certain pairing function.
+        It will then go through and build endges and graphs
+        from those edge-vertex pairs. The graphs are all
+        stored in order.
+
+        Args:
+            X (pd.DataFrame): The dataframe for which to build the Dendrogram.
+            pairing_func (func): A function which takes in two columns and
+                returns a number.
+            max_threshes (int): The maximum number of graphs to build.
+
+        '''
+        if X is not None:
+            self.fit(X, pairing_func=pairing_func, max_threshes=max_threshes)
+
+    def fit(self, X, pairing_func=None, max_threshes=None):
         '''Build graphs for a given pairing function.
         First creates an adjacency matrix given a certain pairing function.
         It will then go through and build endges and graphs from those
@@ -81,17 +101,23 @@ class Dendrogram():
         '''
         if pairing_func is None:
             pairing_func = _one_minus_corr
+
         # Create adjacency matrix and columns list
         self.adj, self.columns = adj_maker(X, pairing_func)
-
-        # Normalize adj
-        # self.adj *= np.abs(1.0 / np.abs(self.adj).max())
 
         # Make edges for every thresh
         self._build_edges(max_threshes)
 
         # Make graphs for every thresh
         self._build_graphs()
+
+    def set_params(self, **params):
+        '''Method to functionally assign parameters.
+        Expects a dictionary **params as input.
+        '''
+        for key in params:
+            setattr(self, key, params[key])
+        return self
 
     def _find_all_graphs(self):
 
@@ -141,7 +167,7 @@ class Dendrogram():
         featurelist = [self.columns[x] for x, _ in self.graphs[step].items()]
         return featurelist
 
-    def score_at_point(self, X, y, step, scoring_func):
+    def score_at_point(self, X, y, model, metric, step, n_splits=1):
         '''A helper method for scoring a Dendrogram at a step.
 
         Args:
@@ -153,9 +179,9 @@ class Dendrogram():
         '''
         featurelist = self.features_at_step(step)
         print('Using {} features'.format(len(featurelist)))
-        return scoring_func(X[featurelist], y)
+        return create_model(X[featurelist], y, model, metric, n_splits=n_splits)
 
-    def shuffle_and_score_at_point(self, X, y, step, scoring_func):
+    def shuffle_score_at_point(self, X, y, model, metric, step, n_splits=1):
         '''A helper method for scoring a Dendrogram at a step.
         This method shuffles the graph representatives and then
         runs ``score_at_point``. By running shuffle and score at point
@@ -170,8 +196,8 @@ class Dendrogram():
             scoring_func (func): A function which takes in X and y.
         '''
 
-        self._shuffle_all_representatives()
-        return self.score_at_point(X, y, step, scoring_func)
+        self.shuffle_all_representatives()
+        return self.score_at_point(X, y, model, metric, step, n_splits=n_splits)
 
     def find_set_of_size(self, size):
         '''Finds a column set of a certain size in the Dendrogram.
@@ -190,7 +216,7 @@ class Dendrogram():
             len(self.graphs[-1])))
         return (len(self.graphs) - 1)
 
-    def _shuffle_all_representatives(self):
+    def shuffle_all_representatives(self):
         assert self.graphs != [], 'Run D._build_graphs to get a graph'
         templist = []
         for graph in self.graphs:
