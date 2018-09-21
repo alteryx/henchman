@@ -130,7 +130,7 @@ can be shuffled to return a similarly connected feature set.
 .. ipython:: python
 
     sel2.graphs[4]
-    sel2._shuffle_all_representatives()
+    sel2.shuffle_all_representatives()
     sel2.graphs[4]
 
 **Module Contents**
