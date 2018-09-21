@@ -6,6 +6,6 @@ jobs:
         - image: painless/tox
     steps:
       - checkout
-      - run: pyenv local 2.7.13 3.6.0
+      - run: pyenv local 2.7.15 3.6.6 3.7.0
       - run: make install
       - run: tox
