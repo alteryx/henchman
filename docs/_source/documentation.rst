@@ -1,4 +1,4 @@
-.. _api_ref:
+.. _documentation:
 
 Documentation
 =============
@@ -183,6 +183,7 @@ We can check :func:`feature importances
     inplace_encoder
     feature_importances
     create_holdout
+
 
 .. _plotting:
 

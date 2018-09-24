@@ -18,6 +18,9 @@ from henchman.learning import create_model
 
 
 class RandomSelect:
+    """Randomly choose a feature set.
+    """
+
     def __init__(self, names=None, n_feats=0):
         '''A class for randomly choosing a feature set.
 
@@ -64,7 +67,7 @@ class RandomSelect:
 
 
 class Dendrogram():
-    """ Takes in a dataframe and a pairing function.
+    """ Pair features by an arbitrary function.
         Creates a dendrogram which is a set of graphs
         representing connectivity at a set of discrete thresholds.
     """

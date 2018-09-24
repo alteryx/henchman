@@ -9,6 +9,7 @@
    plotting_gallery
    contributing
    authors
+   api_ref
 
 Indices and tables
 ==================
