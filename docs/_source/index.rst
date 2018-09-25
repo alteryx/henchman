@@ -1,7 +1,7 @@
 .. include:: readme.rst
 
 .. toctree::
-   :caption: Contents
+   :caption: Contents:
    :titlesonly:
 
    readme

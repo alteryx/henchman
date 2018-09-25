@@ -69,11 +69,10 @@ If you are using conda, you can download the most recent build from our channel 
 
     $ conda install -c featurelabs henchman
 
-These are the preferred methods to install Henchman, as it will always install the most recent stable release. If you don't have `pip`_ installed, this `Python installation guide`_ can guide
-you through the process.
+These are the preferred methods to install Henchman, as it will always install the most recent stable release. You can download miniconda `from this page`_.
 
-.. _pip: https://pip.pypa.io
-.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
+.. _from this page: https://github.com/conda/conda
+
 
 The sources for Henchman can be downloaded from the `Github repo`_.
 
