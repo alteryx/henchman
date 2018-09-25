@@ -2,6 +2,7 @@
 
 versions="linux-64 win-64 osx-64"
 make clean
+conda build .
 python setup.py sdist
 python setup.py bdist_wheel
 twine upload dist/* -r pypi
