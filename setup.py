@@ -49,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/featurelabs/henchman',
-    version='0.0.3.1',
+    version='0.0.4',
     zip_safe=False,
 )
