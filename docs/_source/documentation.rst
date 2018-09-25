@@ -1,7 +1,5 @@
 .. _documentation:
 
-Documentation
-=============
 The ``Henchman`` package has reusable functionality in four areas: 
 `dataframe diagnostics <#diagnostics>`_, `feature selection
 <#selection>`_, `machine learning <#learning>`_ and `bokeh plotting <#plotting>`_.
@@ -23,7 +21,7 @@ We'll load in the csv using pandas.
 .. _diagnostics:
 
 Diagnostics
-~~~~~~~~~~~
+============
 It can sometimes be hard to find information about a dataframe by inspection.
 Frequent questions such as "how large is this dataframe" and "are there duplicates"
 usually require copying code from one notebook to another. In this module, we give easy
@@ -87,7 +85,7 @@ about every column in the dataframe.
 .. _selection:
 
 Selection
-~~~~~~~~~
+==========
 
 There are some lightweight feature selection packages
 provided as well. There is
@@ -147,7 +145,7 @@ can be shuffled to return a similarly connected feature set.
 .. _learning:
 
 Learning
-~~~~~~~~
+==========
 The learning module exists to simplify some frequent machine
 learning calls. For instance, given a feature matrix ``X``
 and a column of labels ``y``, it's nice to be able to
@@ -188,7 +186,7 @@ We can check :func:`feature importances
 .. _plotting:
 
 Plotting 
-~~~~~~~~~
+=========
 
 The plotting module gives a collection of useful dataset
 agnostic plots. Plots have the ability to be *dynamic* or

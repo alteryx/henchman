@@ -1,6 +1,6 @@
 .. _api_ref:
 
-Reference
+API Reference
 ===============
 
 Diagnostics API
