@@ -10,7 +10,8 @@ learning with :ref:`selection` and
 :ref:`learning`.
 
 Why?
-~~~~~~~
+~~~~~
+
 Life is full of reusable functions. Here's what separates
 Henchman:
 
