@@ -95,9 +95,6 @@ Once you have a copy of the source, you can install it with:
 
     $ python setup.py install
 
-.. image:: https://henchman.featurelabs.com/_images/dendrogram.gif
-   :align: center
-
 .. _Github repo: https://github.com/featurelabs/henchman
 .. _tarball: https://github.com/featurelabs/henchman/tarball/master
 
