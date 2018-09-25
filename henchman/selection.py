@@ -33,7 +33,7 @@ class RandomSelect:
 
     def set_params(self, **params):
         '''Method to functionally assign parameters.
-        Expects a dictionary **params as input.
+        Expects a dictionary ``**params`` as input.
         '''
         for key in params:
             setattr(self, key, params[key])
@@ -119,7 +119,7 @@ class Dendrogram():
 
     def set_params(self, **params):
         '''Method to functionally assign parameters.
-        Expects a dictionary **params as input.
+        Expects a dictionary ``**params`` as input.
         '''
         for key in params:
             setattr(self, key, params[key])

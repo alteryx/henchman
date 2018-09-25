@@ -60,7 +60,7 @@ Henchman:
 
 
 Install
-~~~~~~~~~
+========
 To install Henchman, run this command in your terminal:
 
 .. code-block:: console

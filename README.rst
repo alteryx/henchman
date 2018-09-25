@@ -30,12 +30,8 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters is as easy as a single function call.
 
-.. image:: http://henchman.featurelabs.com/_images/piechart.gif
-   :width: 47%
-   :height: 300px
-.. image:: http://henchman.featurelabs.com/_images/histogram.gif
-   :width: 47%
-   :height: 300px
+.. image:: https://henchman.featurelabs.com/_images/timeseries.gif
+   :align: center
 
 - **Memorable API, Extensive documentation**: We have a
   heavy emphasis on ease of use. That means all the
@@ -45,10 +41,6 @@ Henchman:
   example and a `documentation <https://henchman.featurelabs.com>`_
   page.
 
-.. image:: http://henchman.featurelabs.com/_images/create_model_docs.png
-   :width: 75%
-   :align: center
-
 - **Novel Functionality**: We provide a few functions built
   from scratch to add to your data science workflow. There
   are methods to systematically find dataset attributes with
@@ -56,16 +48,8 @@ Henchman:
   select features in novel ways with ``RandomSelect`` and
   ``Dendrogram`` in `henchman.selection`.
 
-.. image:: http://henchman.featurelabs.com/_images/overview.png
-   :width: 47%
-   :height: 300px
-.. image:: http://henchman.featurelabs.com/_images/warnings.png
-   :width: 47%
-   :height: 300px
-
-.. image:: http://henchman.featurelabs.com/_images/dendrogram.gif
+.. image:: https://henchman.featurelabs.com/_images/dendrogram.gif
    :align: center
-
 
 
 Install
