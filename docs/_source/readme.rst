@@ -1,16 +1,18 @@
-Welcome to Henchman!
-=====================
-Henchman is a collection of open source python
-utility functions for working in a jupyter notebook. With
-Henchman, you can rapidly prototype end-to-end data science
-workflows. You can explore data with
-:ref:`diagnostics`, make interesting plots with
-:ref:`plotting`, and do feature selection and machine
-learning with :ref:`selection` and 
+Welcome to Henchman! 
+===================== 
+
+Henchman is a collection of `open source
+<https://github.com/featurelabs/henchman>`_ python utility
+functions for working in a jupyter notebook. With Henchman,
+you can rapidly prototype end-to-end data science workflows.
+You can explore data with :ref:`diagnostics`, make
+interesting plots with :ref:`plotting`, and do feature
+selection and machine learning with :ref:`selection` and
 :ref:`learning`.
 
 Why?
-~~~~~~~
+~~~~~
+
 Life is full of reusable functions. Here's what separates
 Henchman:
 
@@ -30,11 +32,12 @@ Henchman:
    :height: 400px
    :align: center
 
-- **Memorable API, Extensive documentation**: We have a heavy
-  emphasis on ease of use. That means all the functions are
-  sorted into one of 4 semantically named modules and names
-  should be easy to remember inside that module. On top of
-  that, every function has a docstring, an example and a documentation page.
+- **Memorable API, Extensive documentation**: We have a
+  heavy emphasis on ease of use. That means all the
+  functions are sorted into one of 4 semantically named
+  modules and names should be easy to remember inside that
+  module. Additionally, every function has a docstring, an
+  example and a documentation page.
 
 .. image:: img/create_model_docs.png
    :width: 75%
@@ -60,7 +63,7 @@ Henchman:
 
 
 Install
-~~~~~~~~~
+========
 To install Henchman, run this command in your terminal:
 
 .. code-block:: console
@@ -73,11 +76,10 @@ If you are using conda, you can download the most recent build from our channel 
 
     $ conda install -c featurelabs henchman
 
-These are the preferred methods to install Henchman, as it will always install the most recent stable release. If you don't have `pip`_ installed, this `Python installation guide`_ can guide
-you through the process.
+These are the preferred methods to install Henchman, as it will always install the most recent stable release. You can download miniconda `from this page`_.
 
-.. _pip: https://pip.pypa.io
-.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
+.. _from this page: https://github.com/conda/conda
+
 
 The sources for Henchman can be downloaded from the `Github repo`_.
 

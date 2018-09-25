@@ -1,14 +1,24 @@
 .. include:: readme.rst
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :caption: Overview
+   :titlesonly:
 
    readme
-   documentation
    plotting_gallery
+
+.. toctree::
+   :caption: Documentation
+   :maxdepth: 2
+
+   documentation
+
+.. toctree::
+   :caption: Reference
+
    contributing
    authors
+   api_ref
 
 Indices and tables
 ==================

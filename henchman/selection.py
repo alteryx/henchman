@@ -18,6 +18,9 @@ from henchman.learning import create_model
 
 
 class RandomSelect:
+    """Randomly choose a feature set.
+    """
+
     def __init__(self, names=None, n_feats=0):
         '''A class for randomly choosing a feature set.
 
@@ -30,7 +33,7 @@ class RandomSelect:
 
     def set_params(self, **params):
         '''Method to functionally assign parameters.
-        Expects a dictionary **params as input.
+        Expects a dictionary ``**params`` as input.
         '''
         for key in params:
             setattr(self, key, params[key])
@@ -64,7 +67,7 @@ class RandomSelect:
 
 
 class Dendrogram():
-    """ Takes in a dataframe and a pairing function.
+    """ Pair features by an arbitrary function.
         Creates a dendrogram which is a set of graphs
         representing connectivity at a set of discrete thresholds.
     """
@@ -116,7 +119,7 @@ class Dendrogram():
 
     def set_params(self, **params):
         '''Method to functionally assign parameters.
-        Expects a dictionary **params as input.
+        Expects a dictionary ``**params`` as input.
         '''
         for key in params:
             setattr(self, key, params[key])
@@ -159,8 +162,12 @@ class Dendrogram():
 
     def features_at_step(self, step):
         '''Find the representatives at a certain step for a given graph.
+
         Args:
             step (int): Which position in self.threshlist to show features from.
+
+        Returns:
+            A list of features at ``step``. (list[str])
         '''
         featurelist = [self.columns[x] for x, _ in self.graphs[step].items()]
         return featurelist
@@ -190,8 +197,11 @@ class Dendrogram():
             X (pd.DataFrame): A dataframe with the same columns that the
                 Dendrogram was built with.
             y (pd.Series): Labels for X.
+            model: A sklearn model with fit and predict methods.
+            metric: A metric which takes y_test, preds and returns a score.
             step (int): Which position in self.threshlist to show features from.
-            scoring_func (func): A function which takes in X and y.
+            n_splits (int): If 1 use a train_test_split. Otherwise use tssplit.
+                        Default value is 1.
         '''
 
         self.shuffle_all_representatives()
@@ -199,6 +209,13 @@ class Dendrogram():
 
     def find_set_of_size(self, size):
         '''Finds a column set of a certain size in the Dendrogram.
+        This checks graphs until there are only ``size`` remaining components.
+
+        Args:
+            size (int): The number of features you want to end up with.
+
+        Returns:
+            The step at which there are ``size`` connected components. (int)
         '''
         for i, graph in enumerate(self.graphs):
             if len(graph.keys()) <= size:
@@ -215,6 +232,12 @@ class Dendrogram():
         return (len(self.graphs) - 1)
 
     def shuffle_all_representatives(self):
+        '''Shuffle representatives for every graph in ``D.graphs``.
+        For every graph, look through the list associated to
+        each key and choose one to be the new key. Note that keys
+        are not fixed step by step, so the key for a cluster at step n
+        is not guarenteed to be the key for the same cluster at step n+1.
+        '''
         assert self.graphs != [], 'Run D._build_graphs to get a graph'
         templist = []
         for graph in self.graphs:
