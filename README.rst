@@ -20,8 +20,7 @@ learning with ``henchman.selection`` and
 
 For more information, visit the Henchman `documentation <https://henchman.featurelabs.com>`_.
 
-.. image:: https://henchman.featurelabs.com/_images/timeseries.gif
-   :align: center
+
 
 Why?
 ~~~~~~~
@@ -33,6 +32,9 @@ Henchman:
   analysis plots. With sliders and checkboxes, finding the
   right plot parameters can be done with a `single function call <https://henchman.featurelabs.com/plotting_gallery.html>`_.
 
+.. image:: https://henchman.featurelabs.com/_images/timeseries.gif
+   :align: center
+
 - **Memorable API, Extensive documentation**: We have a
   heavy emphasis on ease of use. That means all the
   functions are sorted into one of 4 semantically named
@@ -40,6 +42,10 @@ Henchman:
   module. Additionally, every function has a docstring, an
   example and a `documentation <https://henchman.featurelabs.com>`_
   page.
+
+.. image:: http://henchman.featurelabs.com/_images/create_model_docs.png
+   :width: 75%
+   :align: center
 
 - **Novel Functionality**: We provide a few functions built
   from scratch to add to your data science workflow. There
