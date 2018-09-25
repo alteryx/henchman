@@ -30,11 +30,12 @@ Henchman:
    :height: 400px
    :align: center
 
-- **Memorable API, Extensive documentation**: We have a heavy
-  emphasis on ease of use. That means all the functions are
-  sorted into one of 4 semantically named modules and names
-  should be easy to remember inside that module. On top of
-  that, every function has a docstring, an example and a documentation page.
+- **Memorable API, Extensive documentation**: We have a
+  heavy emphasis on ease of use. That means all the
+  functions are sorted into one of 4 semantically named
+  modules and names should be easy to remember inside that
+  module. Additionally, every function has a docstring, an
+  example and a documentation page.
 
 .. image:: img/create_model_docs.png
    :width: 75%

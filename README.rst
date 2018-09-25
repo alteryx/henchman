@@ -20,6 +20,9 @@ learning with ``henchman.selection`` and
 
 For more information, visit the Henchman `documentation <https://henchman.featurelabs.com>`_.
 
+.. image:: https://henchman.featurelabs.com/_images/timeseries.gif
+   :align: center
+
 Why?
 ~~~~~~~
 Life is full of reusable functions. Here's what separates
@@ -28,28 +31,22 @@ Henchman:
 - **Easy Interactive Plotting**: We bypass the flexible Bokeh
   API in favor of a small, rigid collection of standard data
   analysis plots. With sliders and checkboxes, finding the
-  right plot parameters is as easy as a single function call.
-
-.. image:: https://henchman.featurelabs.com/_images/timeseries.gif
-   :align: center
+  right plot parameters can be done with a `single function call <https://henchman.featurelabs.com/plotting_gallery.html>`_.
 
 - **Memorable API, Extensive documentation**: We have a
   heavy emphasis on ease of use. That means all the
   functions are sorted into one of 4 semantically named
   modules and names should be easy to remember inside that
-  module. On top of that, every function has a docstring, an
+  module. Additionally, every function has a docstring, an
   example and a `documentation <https://henchman.featurelabs.com>`_
   page.
 
 - **Novel Functionality**: We provide a few functions built
   from scratch to add to your data science workflow. There
   are methods to systematically find dataset attributes with
-  ``overview`` and ``warnings`` from `henchman.diagnostics` and classes to
-  select features in novel ways with ``RandomSelect`` and
-  ``Dendrogram`` in `henchman.selection`.
-
-.. image:: https://henchman.featurelabs.com/_images/dendrogram.gif
-   :align: center
+  `overview <https://henchman.featurelabs.com/documentation.html#diagnostics>`_ and `warnings <https://henchman.featurelabs.com/generated/henchman.diagnostics.warnings.html>`_ from ``henchman.diagnostics`` and classes to
+  select features in novel ways with `RandomSelect <https://henchman.featurelabs.com/documentation.html#selection>`_ and
+  `Dendrogram <https://henchman.featurelabs.com/generated/henchman.selection.Dendrogram.html>`_ in ``henchman.selection``.
 
 
 Install
@@ -92,6 +89,8 @@ Once you have a copy of the source, you can install it with:
 
     $ python setup.py install
 
+.. image:: https://henchman.featurelabs.com/_images/dendrogram.gif
+   :align: center
 
 .. _Github repo: https://github.com/featurelabs/henchman
 .. _tarball: https://github.com/featurelabs/henchman/tarball/master
