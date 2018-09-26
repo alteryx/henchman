@@ -9,6 +9,7 @@ Contents:
         histogram
         scatter
         timeseries
+        lineplot
         dendrogram
         feature_importances
 '''
@@ -1073,8 +1074,3 @@ def _lineplot_widgets(col_1, col_2, samples, callback):
     slider = Slider(start=1, end=col_1.shape[0], value=samples, title='Samples')
     slider.on_change('value', callback)
     return slider
-
-
-show(lineplot(cumulative['x'], cumulative['index'], col_1_names=cumulative.index, samples=None),
-     hover=True, height=400, static=False, x_range=(0, 341),
-     title='Downloads by Days since September 27', y_axis='Cumulative Downloads', x_axis='Days since Release')

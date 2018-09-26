@@ -65,6 +65,7 @@ Plotting API
     histogram
     timeseries
     scatter
+    lineplot
     dendrogram
     feature_importances
     roc_auc

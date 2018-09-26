@@ -222,6 +222,7 @@ for some example bokeh plots.
     histogram
     timeseries
     scatter
+    lineplot
     dendrogram
     feature_importances
     roc_auc
