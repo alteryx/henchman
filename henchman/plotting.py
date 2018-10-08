@@ -9,6 +9,7 @@ Contents:
         histogram
         scatter
         timeseries
+        lineplot
         dendrogram
         feature_importances
 '''
@@ -413,6 +414,51 @@ def scatter(col_1, col_2, cat=None, label=None, aggregate='last',
         else:
             doc.add_root(plot)
     return lambda doc: modify_doc(doc, col_1, col_2, cat, label, aggregate, figargs)
+
+
+def lineplot(col_1, col_2, label=None, samples=None,
+             figargs=None):
+    '''Creates a line plot of two variables.
+    This function allows for the display of two variables with
+    optional arguments to smooth the graph and add non-numeric axis labels.
+    A standard example would be to look at
+    the "last" row for a column that's changing over time.
+
+    Args:
+        col_1 (pd.Series): The x-values of the line.
+        col_2 (pd.Series): The y-values of the line.
+        label (pd.Series, optional): A numeric label to be used in the hovertool.
+        samples (int): The number of evenly spaced samples to take of the dataframe.
+
+    Example:
+        If the dataframe ``X`` has an integer ``time`` and ``quantity``.
+
+        >>> import henchman.plotting as hplot
+        >>> plot = hplot.scatter(X['time'], X['quantity'], col_1_names=pd.to_datetime(X['time']))
+        >>> hplot.show(plot)
+
+    '''
+    if figargs is None:
+        return lambda figargs: lineplot(
+            col_1, col_2, label, samples, figargs=figargs)
+    source = ColumnDataSource(_make_lineplot_source(col_1, col_2, label, samples))
+    plot = _make_lineplot_plot(col_1, col_2, label, source, figargs)
+    plot = _modify_plot(plot, figargs)
+
+    if figargs['static']:
+        return plot
+
+    def modify_doc(doc, col_1, col_2,  label, samples, figargs):
+        def callback(attr, old, new):
+            try:
+                source.data = ColumnDataSource(
+                    _make_lineplot_source(col_1, col_2, label, samples=slider.value)).data
+            except Exception as e:
+                print(e)
+
+        slider = _lineplot_widgets(col_1, col_2, samples, callback)
+        doc.add_root(column(slider, plot))
+    return lambda doc: modify_doc(doc, col_1, col_2, label, samples, figargs)
 
 
 def feature_importances(X, model, n_feats=5, figargs=None):
@@ -966,3 +1012,67 @@ def _scatter_widgets(col_1, col_2, aggregate, callback):
                               ('min', 'min')])
     dropdown.on_change('value', callback)
     return dropdown
+
+
+def _make_lineplot_source(col_1, col_2, label, samples):
+    tmp = pd.DataFrame({'col_1': col_1, 'col_2': col_2})
+
+    if label is not None:
+        tmp['label'] = label
+
+    if samples is not None:
+        size = tmp.shape[0] / float(samples)
+        tmp['segment'] = [np.floor(i / size) for i in range(tmp.shape[0])]
+        tmp = tmp.groupby('segment').head(1)
+
+    return tmp
+
+
+def _make_lineplot_plot(col_1, col_2, label, source, figargs):
+    tools = ['box_zoom', 'save', 'reset']
+    if figargs['hover']:
+        hover = HoverTool(tooltips=[
+            (col_1.name, ' @col_1'),
+            (col_2.name, ' @col_2'),
+        ])
+        if label is not None:
+            hover.tooltips += [('label', ' @label')]
+
+        tools += [hover]
+    tools = []
+
+    plot = figure(tools=tools)
+    plot.toolbar.logo = None
+    if figargs['colors'] is not None:
+        line_color = figargs['colors'][0]
+    else:
+        line_color = '#1F77B4'
+    plot.line(x='col_1',
+              y='col_2',
+              color=line_color,
+              source=source,
+              line_width=4,
+              alpha=.8)
+    return plot
+
+
+def _lineplot_widgets(col_1, col_2, samples, callback):
+    if samples is None:
+        samples = col_1.shape[0]
+    slider = Slider(start=1, end=col_1.shape[0], value=samples, title='Samples')
+    slider.on_change('value', callback)
+    return slider
+
+
+filtered = data[data['timestamp'] > pd.to_datetime('2017-8-1')]
+filtered = filtered.sort_values(by='timestamp')
+filtered['date'] = filtered['timestamp'].dt.date
+cumulative = filtered.groupby('date').count()[['index']].cumsum()
+cumulative['Day'] = [i for i in range(cumulative.shape[0])]
+
+cumulative = cumulative.rename(columns={'index': 'Downloads'})
+
+
+show(lineplot(cumulative['Day'], cumulative['Downloads'], samples=60),
+     hover=True, height=400, width=800, static=False,
+     title='Downloads to Date', y_axis='Cumulative Downloads', x_axis='Date')
